@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan de Course — 90km MMB 2026 — Gaël BERINGUET</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#f4f6f9;color:#1a2033;font-family:'Inter',sans-serif;font-size:14px;padding:24px 20px;line-height:1.5;max-width:1600px;margin:0 auto;}
+  .header{background:#fff;border-radius:12px;padding:22px 28px;margin-bottom:16px;border:1px solid #e2e6ed;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;}
+  .race-label{font-size:10px;font-weight:700;letter-spacing:.18em;color:#3b6fd4;text-transform:uppercase;margin-bottom:5px;}
+  .race-title{font-size:24px;font-weight:700;color:#0f1929;line-height:1.1;}
+  .race-sub{font-size:12px;color:#6b7a99;margin-top:5px;}
+  .header-stats{display:flex;gap:0;flex-shrink:0;border:1px solid #e2e6ed;border-radius:10px;overflow:hidden;}
+  .stat{padding:10px 16px;text-align:center;border-right:1px solid #e2e6ed;background:#fff;}
+  .stat:last-child{border-right:none;}
+  .stat-label{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9aa3b8;margin-bottom:3px;}
+  .stat-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:#0f1929;}
+  .stat-val.blue{color:#3b6fd4;} .stat-val.green{color:#16a36b;}
+  .section-title{font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#6b7a99;margin-bottom:10px;margin-top:20px;border-left:3px solid #3b6fd4;padding-left:10px;}
+  .chart-card{background:#fff;border-radius:12px;border:1px solid #e2e6ed;padding:18px 20px;margin-bottom:14px;}
+  .chart-title{font-size:13px;font-weight:600;color:#0f1929;margin-bottom:3px;}
+  .chart-sub{font-size:11px;color:#9aa3b8;margin-bottom:12px;}
+  canvas{display:block;width:100%;}
+  .grad-legend{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center;}
+  .grad-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:#6b7a99;}
+  .grad-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+  .heatmap-card{background:#fff;border-radius:12px;border:1px solid #e2e6ed;padding:14px 18px;margin-bottom:14px;}
+  .hm-cell{width:9px;height:32px;border-radius:2px;position:relative;cursor:default;flex-shrink:0;}
+  .sections-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;}
+  .sec-card{background:#fff;border-radius:10px;border:1px solid #e2e6ed;padding:12px;}
+  .sec-card.extreme{border-top:3px solid #dc2626;} .sec-card.high{border-top:3px solid #ea580c;} .sec-card.medium{border-top:3px solid #3b82f6;}
+  .sec-num{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9aa3b8;margin-bottom:3px;}
+  .sec-name{font-size:13px;font-weight:700;color:#0f1929;margin-bottom:5px;line-height:1.3;}
+  .sec-km{font-family:'JetBrains Mono',monospace;font-size:10px;color:#3b6fd4;margin-bottom:6px;}
+  .sec-stats{display:flex;flex-direction:column;gap:3px;margin-bottom:6px;}
+  .sec-stat{font-size:11px;color:#4b5680;} .sec-stat strong{color:#0f1929;}
+  .sec-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;text-transform:uppercase;margin-bottom:6px;}
+  .badge-extreme{background:#fee2e2;color:#991b1b;} .badge-descent{background:#dbeafe;color:#1e40af;}
+  .sec-tip{font-size:11px;color:#4b5680;line-height:1.4;border-top:1px solid #f0f2f7;padding-top:6px;margin-top:3px;}
+  .sec-tip strong{color:#dc2626;}
+
+  /* MAIN TABLE */
+  .card{background:#fff;border-radius:12px;border:1px solid #e2e6ed;overflow:hidden;margin-bottom:14px;}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  thead th{background:#f0f3f9;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b7a99;padding:10px 10px;text-align:left;white-space:nowrap;border-bottom:2px solid #e2e6ed;}
+  thead th.r{text-align:right;} thead th.c{text-align:center;}
+  tbody td{padding:9px 10px;vertical-align:top;border-bottom:1px solid #eef0f5;}
+  tbody td.r{text-align:right;} tbody td.c{text-align:center;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#f8f9fc;}
+  tr.r-depart td{background:#eef4ff;} tr.r-arrivee td{background:#edfaf4;}
+  tr.r-critical td{background:#fff8f0;} tr.r-key td{background:#f0fdf8;}
+  tr.r-parents td{background:#faf5ff;}
+  tr.r-section td{background:#f5f6fa;padding:5px 10px;}
+  .section-label{font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#9aa3b8;}
+  .cp{font-weight:600;font-size:13px;color:#0f1929;white-space:nowrap;}
+  .cp.depart{color:#3b6fd4;font-size:14px;} .cp.arrivee{color:#16a36b;font-size:14px;}
+  .badge-parents{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;background:#f3e8ff;color:#7c3aed;margin-left:4px;white-space:nowrap;}
+  .km{font-family:'JetBrains Mono',monospace;font-size:11px;color:#9aa3b8;font-weight:500;}
+  .rav{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;background:#ddeaff;color:#3b6fd4;white-space:nowrap;}
+  .dplus{font-family:'JetBrains Mono',monospace;font-size:10px;color:#16a36b;font-weight:600;}
+  .dminus{font-family:'JetBrains Mono',monospace;font-size:10px;color:#3b82f6;font-weight:600;}
+  .t-target{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#b06000;}
+  .t-elapsed{font-family:'JetBrains Mono',monospace;font-size:10px;color:#9aa3b8;display:block;margin-top:1px;}
+  .t-bh{font-family:'JetBrains Mono',monospace;font-size:11px;color:#6b7a99;}
+  .mg{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;}
+  .mg-good{background:#d1fae5;color:#065f46;} .mg-ok{background:#dcfce7;color:#166534;}
+  .mg-tight{background:#fef3c7;color:#92400e;} .mg-none{color:#c4c9d6;font-size:10px;}
+  .pace{font-family:'JetBrains Mono',monospace;font-size:11px;color:#6b7a99;}
+  .pace.slow{color:#d97706;} .pace.fast{color:#16a36b;}
+
+  /* NUTRITION COLUMN */
+  .nutri-box{font-size:11px;line-height:1.5;min-width:180px;max-width:220px;}
+  .nutri-line{display:flex;gap:5px;align-items:baseline;margin-bottom:2px;flex-wrap:wrap;}
+  .nutri-label{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9aa3b8;white-space:nowrap;}
+  .nutri-val{font-size:11px;color:#1a2033;}
+  .nutri-gluc{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#3b6fd4;background:#eff6ff;padding:1px 6px;border-radius:3px;margin-top:3px;}
+  .nutri-warn{font-size:10px;color:#dc2626;font-weight:600;margin-top:3px;}
+  .nutri-parents{font-size:10px;color:#7c3aed;font-weight:600;margin-top:3px;}
+  .nutri-hr{border:none;border-top:1px solid #eef0f5;margin:4px 0;}
+
+  /* CONSIGNE */
+  .note{font-size:11px;color:#4b5680;line-height:1.4;max-width:200px;}
+  .note.warn{color:#92400e;font-weight:500;} .note.crit{color:#991b1b;font-weight:600;}
+  .note.ok{color:#065f46;font-weight:500;}
+
+  /* 2025 columns */
+  .t25{font-family:'JetBrains Mono',monospace;font-size:11px;color:#9aa3b8;}
+  .t25.abandon{color:#dc2626;font-weight:700;font-size:10px;}
+  .tr25{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;}
+  .tr25.good{color:#16a36b;} .tr25.tight{color:#d97706;}
+  .tr25.fail{color:#dc2626;} .tr25.neutral{color:#9aa3b8;} .tr25.abandon{color:#dc2626;font-size:10px;}
+  .tr25-sub{font-size:9px;color:#9aa3b8;display:block;margin-top:1px;font-style:italic;}
+  .tr25-sub.fail{color:#ef4444;} .tr25-sub.good{color:#16a36b;}
+
+  .callout{background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#78350f;line-height:1.6;}
+  .callout strong{color:#451a03;}
+  .insights{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+  .ins{background:#fff;border:1px solid #e2e6ed;border-radius:10px;padding:14px;}
+  .ins.red-b{border-color:#fca5a5;} .ins.green-b{border-color:#6ee7b7;}
+  .ins.amber-b{border-color:#fcd34d;} .ins.blue-b{border-color:#93c5fd;} .ins.purple-b{border-color:#c4b5fd;}
+  .ins-title{font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px;}
+  .ins-title.red{color:#dc2626;} .ins-title.green{color:#16a36b;}
+  .ins-title.amber{color:#d97706;} .ins-title.blue{color:#3b6fd4;} .ins-title.purple{color:#7c3aed;}
+  .ins ul{list-style:none;}
+  .ins ul li{font-size:11.5px;color:#4b5680;padding:4px 0;border-bottom:1px solid #eef0f5;display:flex;gap:7px;line-height:1.4;}
+  .ins ul li:last-child{border-bottom:none;}
+  .ins ul li::before{content:'→';color:#c4c9d6;flex-shrink:0;}
+  .ins ul li strong{color:#1a2033;}
+  .footnote{font-size:10px;color:#9aa3b8;border-top:1px solid #e2e6ed;padding-top:12px;line-height:1.7;}
+  @media(max-width:900px){.insights{grid-template-columns:1fr;}.sections-grid{grid-template-columns:1fr 1fr;}.header{flex-direction:column;}body{padding:12px;}}
+  @media(max-width:600px){.sections-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="race-label">Plan de course personnel · Édition 2026</div>
+    <div class="race-title">90 km du Mont-Blanc</div>
+    <div class="race-sub">Gaël BERINGUET · Vague 3 · Départ 5h05 · Objectif 22h · Arrivée cible 03h05 · <span style="color:#7c3aed;font-weight:600;">👥 Parents : Buet · La Villaz · Emosson · Les Bois</span></div>
+  </div>
+  <div class="header-stats">
+    <div class="stat"><div class="stat-label">Distance GPX</div><div class="stat-val">86,8 km</div></div>
+    <div class="stat"><div class="stat-label">D+</div><div class="stat-val">6 137 m</div></div>
+    <div class="stat"><div class="stat-label">D-</div><div class="stat-val">6 137 m</div></div>
+    <div class="stat"><div class="stat-label">Objectif</div><div class="stat-val blue">22 h</div></div>
+    <div class="stat"><div class="stat-label">Arrivée</div><div class="stat-val green">03:05</div></div>
+    <div class="stat"><div class="stat-label">BH max</div><div class="stat-val">05:05</div></div>
+  </div>
+</div>
+
+<div class="section-title">Profil altimétrique GPX — 2026</div>
+<div class="chart-card">
+  <div class="chart-title">Profil altimétrique — 90km du Mont-Blanc 2026</div>
+  <div class="chart-sub">Source : fichier GPX officiel · Couleurs = sévérité gradient · Zones critiques surlignées · 🔴 = DNF 2025 (Les Bois, km 69,7) · 👥 = Support parents</div>
+  <canvas id="profileChart" height="280"></canvas>
+  <div class="grad-legend">
+    <span style="font-size:10px;font-weight:600;color:#6b7a99;margin-right:4px;">Gradient :</span>
+    <div class="grad-legend-item"><div class="grad-dot" style="background:#991b1b"></div>&gt;25%</div>
+    <div class="grad-legend-item"><div class="grad-dot" style="background:#dc2626"></div>15-25%</div>
+    <div class="grad-legend-item"><div class="grad-dot" style="background:#f97316"></div>8-15%</div>
+    <div class="grad-legend-item"><div class="grad-dot" style="background:#fbbf24"></div>2-8%</div>
+    <div class="grad-legend-item"><div class="grad-dot" style="background:#d1d5db"></div>Plat</div>
+    <div class="grad-legend-item"><div class="grad-dot" style="background:#93c5fd"></div>-2/-8%</div>
+    <div class="grad-legend-item"><div class="grad-dot" style="background:#3b82f6"></div>-8/-20%</div>
+    <div class="grad-legend-item"><div class="grad-dot" style="background:#1d4ed8"></div>&lt;-20%</div>
+  </div>
+</div>
+
+<div class="section-title">Intensité gradient — km par km</div>
+<div class="heatmap-card">
+  <div style="font-size:11px;color:#6b7a99;margin-bottom:8px;">Rouge = montée · Bleu = descente · Hauteur = intensité</div>
+  <div style="overflow-x:auto;"><div style="display:flex;gap:2px;min-width:max-content;" id="heatmapRow"></div>
+  <div style="display:flex;gap:2px;min-width:max-content;margin-top:3px;" id="heatmapLabels"></div></div>
+</div>
+
+<div class="section-title">Les 5 passages déterminants — analyse GPX précise</div>
+<div class="sections-grid">
+  <div class="sec-card extreme"><div class="sec-num">Section 1</div><div class="sec-name">Col du Passet (La Villaz → Emosson)</div><div class="sec-km">km 35,1 → 40,6 · 5,5 km</div><span class="sec-badge badge-extreme">⛰ Montée extrême</span><div class="sec-stats"><div class="sec-stat">D+ : <strong>+756 m</strong></div><div class="sec-stat">Gradient km 36-38 : <strong>26-27% net</strong></div><div class="sec-stat">Max GPX : <strong>50% sur 500m</strong></div></div><div class="sec-tip"><strong>Cause des crampes 2025.</strong> Marcher 100%, bâtons. 👥 Parents à Emosson → partir avec 2 flasques Naak pleines.</div></div>
+  <div class="sec-card extreme"><div class="sec-num">Section 2</div><div class="sec-name">Descente Emosson → Châtelard</div><div class="sec-km">km 40,6 → 44,7 · 4,1 km</div><span class="sec-badge badge-descent">↓ Descente brutale</span><div class="sec-stats"><div class="sec-stat">D- : <strong>−866 m</strong></div><div class="sec-stat">Gradient km 41-42 : <strong>−30%</strong></div><div class="sec-stat">Max GPX : <strong>−36% sur 500m</strong></div></div><div class="sec-tip"><strong>Eau manquée en 2025 → bonk.</strong> Boire Naak en descente même sans soif. <strong>Pas d'eau au Châtelard en 2026.</strong></div></div>
+  <div class="sec-card high"><div class="sec-num">Section 3</div><div class="sec-name">Châtelard → Tête de Balme</div><div class="sec-km">km 44,7 → 51,5 · 6,8 km</div><span class="sec-badge badge-extreme">⛰ Montée majeure</span><div class="sec-stats"><div class="sec-stat">D+ : <strong>+1 171 m</strong></div><div class="sec-stat">km 44-45 : <strong>max 58% (!)</strong></div><div class="sec-stat">6,8 km sans ravito eau</div></div><div class="sec-tip">Manger 1 gel avant de repartir du Châtelard. Le premier km = km le plus raide du parcours.</div></div>
+  <div class="sec-card extreme"><div class="sec-num">Section 4 ⚠</div><div class="sec-name">Les Bois → Montenvers</div><div class="sec-km">km 69,7 → 75,2 · 5,5 km</div><span class="sec-badge badge-extreme">⛰ Boss final</span><div class="sec-stats"><div class="sec-stat">D+ : <strong>+825 m</strong></div><div class="sec-stat">km 71-72 : <strong>max 42% (!)</strong></div><div class="sec-stat">Au km 69+ après 16h40</div></div><div class="sec-tip"><strong>DNF 2025.</strong> 👥 Parents rechargent tout aux Bois. S'asseoir, manger 1 Clif Bar + soupe, repartir avec 2 Naak pleines.</div></div>
+  <div class="sec-card medium"><div class="sec-num">Section 5</div><div class="sec-name">Plan Aiguille → Arrivée</div><div class="sec-km">km 81,2 → 88,8 · 7,6 km</div><span class="sec-badge badge-descent">↓ Descente finale</span><div class="sec-stats"><div class="sec-stat">D- : <strong>−1 154 m</strong></div><div class="sec-stat">km 85-86 : <strong>−22%</strong></div><div class="sec-stat">7,6 km continus</div></div><div class="sec-tip">Bâtons obligatoires. Café au Plan Aiguille avant de descendre. Marge 2h sur BH = ne pas se précipiter.</div></div>
+</div>
+
+<div class="section-title">Analyse comparative GPX — Allures &amp; FC 2025 réel vs 2026 cible</div>
+<div class="chart-card" style="padding-bottom:18px;">
+  <div class="chart-title">Section par section — pourquoi tu t'es arrêté</div>
+  <div style="overflow-x:auto;margin-top:14px;">
+  <table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <thead><tr style="background:#f0f3f9;border-bottom:2px solid #e2e6ed;">
+      <th style="padding:9px 11px;text-align:left;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b7a99;white-space:nowrap;">Section</th>
+      <th style="padding:9px 11px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b7a99;text-align:center;">Pace 2025 réel</th>
+      <th style="padding:9px 11px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b7a99;text-align:center;">FC moy.</th>
+      <th style="padding:9px 11px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b7a99;text-align:center;">Pace cible 2026</th>
+      <th style="padding:9px 11px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b7a99;text-align:center;">Écart</th>
+      <th style="padding:9px 11px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6b7a99;">Lecture</th>
+    </tr></thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #eef0f5;"><td style="padding:9px 11px;font-weight:600;">Départ → Planpraz</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:600;color:#d97706;">12:24/km</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;">141 bpm</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;color:#16a36b;font-weight:600;">14:38/km</td><td style="padding:9px 11px;text-align:center;"><span style="background:#fee2e2;color:#991b1b;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;">−2:14 🔴</span></td><td style="padding:9px 11px;font-size:11px;color:#4b5680;">Trop rapide. Fatigue musculaire accumulée avant le Col du Passet.</td></tr>
+      <tr style="border-bottom:1px solid #eef0f5;background:#fafbfd;"><td style="padding:9px 11px;font-weight:600;">Planpraz → Flégère</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:600;color:#d97706;">8:57/km</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;">150 bpm</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;color:#16a36b;font-weight:600;">10:32/km</td><td style="padding:9px 11px;text-align:center;"><span style="background:#fee2e2;color:#991b1b;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;">−1:35 🔴</span></td><td style="padding:9px 11px;font-size:11px;color:#4b5680;">FC à 150 bpm sur traverse = effort trop intense.</td></tr>
+      <tr style="border-bottom:1px solid #eef0f5;"><td style="padding:9px 11px;font-weight:600;">Flégère → Buet</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:600;color:#d97706;">10:05/km</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;">146 bpm</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;color:#16a36b;font-weight:600;">11:19/km</td><td style="padding:9px 11px;text-align:center;"><span style="background:#fef3c7;color:#92400e;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;">−1:14 ⚠</span></td><td style="padding:9px 11px;font-size:11px;color:#4b5680;">Encore trop rapide. Réserves musculaires entamées à mi-course.</td></tr>
+      <tr style="border-bottom:1px solid #eef0f5;background:#fff8f0;"><td style="padding:9px 11px;font-weight:700;">La Villaz → Emosson</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;color:#dc2626;">18:44/km</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;">137 bpm</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;color:#16a36b;font-weight:600;">21:26/km</td><td style="padding:9px 11px;text-align:center;"><span style="background:#fee2e2;color:#991b1b;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;">−2:42 🔴</span></td><td style="padding:9px 11px;font-size:11px;color:#dc2626;font-weight:500;">Cause crampes. 30% trop rapide sur la section la plus difficile.</td></tr>
+      <tr style="border-bottom:1px solid #eef0f5;background:#fff8f0;"><td style="padding:9px 11px;font-weight:700;">Emosson → Châtelard</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;color:#dc2626;">18:06/km</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;color:#dc2626;">118 bpm ⚠</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;color:#16a36b;font-weight:600;">17:09/km</td><td style="padding:9px 11px;text-align:center;"><span style="background:#fef3c7;color:#92400e;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;">+0:57</span></td><td style="padding:9px 11px;font-size:11px;color:#dc2626;font-weight:500;">FC effondrée = déshydratation. Eau manquée au Châtelard → cascade.</td></tr>
+      <tr style="border-bottom:1px solid #eef0f5;background:#fff8f0;"><td style="padding:9px 11px;font-weight:600;">Châtelard → Le Tour</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;">15:50/km</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;color:#dc2626;">123 bpm ⚠</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;color:#16a36b;font-weight:600;">15:50/km</td><td style="padding:9px 11px;text-align:center;"><span style="background:#f0f2f7;color:#6b7a99;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;">= pace</span></td><td style="padding:9px 11px;font-size:11px;color:#4b5680;">Pace OK mais FC 123 = corps en mode survie. Réservoirs vides.</td></tr>
+      <tr style="border-bottom:1px solid #eef0f5;background:#fef2f2;"><td style="padding:9px 11px;font-weight:700;color:#991b1b;">Les Bois → FIN</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;color:#dc2626;">ABANDON</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;color:#dc2626;">99 bpm</td><td style="padding:9px 11px;text-align:center;font-family:'JetBrains Mono',monospace;color:#16a36b;font-weight:600;">27:16/km</td><td style="padding:9px 11px;text-align:center;">—</td><td style="padding:9px 11px;font-size:11px;color:#dc2626;font-weight:600;">FC 99 bpm = hypoglycémie/déshydratation profonde.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <div style="background:#fff3cd;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#92400e;margin-bottom:6px;">⚠ Signal d'alerte FC</div>
+      <div style="font-size:11px;color:#78350f;line-height:1.5;">Si FC &lt; 125 bpm sur une montée → s'arrêter, boire Naak, manger. C'est le signal que le moteur tourne à vide. Ne pas ignorer ce signal en pensant que ça va passer.</div>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:12px 14px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#1e40af;margin-bottom:6px;">📊 FC référence Gaël (GPX 2025)</div>
+      <div style="font-size:11px;color:#1e3a8a;line-height:1.5;"><strong>Montée :</strong> 138-146 bpm · <strong>Plat :</strong> 140-152 bpm · <strong>Descente :</strong> 128-138 bpm · <strong>Alerte :</strong> &lt;125 bpm · <strong>Bonk :</strong> &lt;110 bpm</div>
+    </div>
+  </div>
+</div>
+
+<!-- NUTRITION LEGEND -->
+<div class="section-title">Stratégie nutrition — Légende produits</div>
+<div class="chart-card" style="padding:14px 18px;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:11px;">
+    <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:15px;">🧴</span><span><strong>Naak Ultra Energy</strong> — 72g/sachet · 55g glucides · 650mg électrolytes · dans les flasques (500ml d'eau par sachet)</span></div>
+    <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:15px;">🍯</span><span><strong>Gel Baouw</strong> — 40g · 30-35g glucides · texture fluide</span></div>
+    <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:15px;">🥣</span><span><strong>Purée Baouw</strong> — 90g · 15g glucides · lipides · digeste en nuit</span></div>
+    <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:15px;">🍫</span><span><strong>Clif Bar</strong> — 68g · 35-44g glucides · 11g protéines · ravitos uniquement</span></div>
+    <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:15px;">🧂</span><span><strong>SaltStick</strong> — 1 cp = 215mg sodium · 1 toutes les 45 min sur montées/chaleur</span></div>
+    <div style="display:flex;align-items:center;gap:6px;"><span style="color:#7c3aed;font-weight:700;font-size:13px;">👥</span><span><strong>Parents</strong> — rechargement complet possible</span></div>
+  </div>
+</div>
+
+<!-- MAIN PLAN TABLE -->
+<div class="section-title">Plan de course détaillé · Objectif 22h · Vague 5h05</div>
+<div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7a99;"><span style="background:#dcfce7;color:#166534;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;">+35 min</span>Marge BH confortable</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7a99;"><span style="background:#fef3c7;color:#92400e;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;">+20 min</span>Marge serrée</div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7a99;"><span style="background:#f3e8ff;color:#7c3aed;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;">👥 Parents</span>Rechargement complet</div>
+  <div style="font-size:10px;font-style:italic;color:#9aa3b8;">¹ km≠ = distances différentes 2025 (92km) vs 2026 (88,8km)</div>
+</div>
+
+<div class="card">
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>Checkpoint</th>
+      <th class="r">km</th>
+      <th>D+ / D−<br><span style="font-size:8px;font-weight:400;font-style:italic;">depuis préc.</span></th>
+      <th>Ravito</th>
+      <th>Heure cible</th>
+      <th>BH</th>
+      <th>Marge</th>
+      <th class="r">Pace</th>
+      <th>🍎 Nutrition — emporter depuis ce point</th>
+      <th>Consigne clé <span style="font-size:8px;font-style:italic;font-weight:400;">(nutrition à venir)</span></th>
+      <th>2025 réel</th>
+      <th>2025 → 5h05 ¹</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <!-- DEPART -->
+    <tr class="r-depart">
+      <td><span class="cp depart">Départ Chamonix</span></td>
+      <td class="r"><span class="km">0,0</span></td>
+      <td>—</td>
+      <td>—</td>
+      <td><span class="t-target">05:05</span><span class="t-elapsed">0h00</span></td>
+      <td>—</td>
+      <td><span class="mg-none">—</span></td>
+      <td class="r"><span class="pace">—</span></td>
+      <td><div class="nutri-box">
+        <div class="nutri-line"><span class="nutri-label">Flasques</span><span class="nutri-val">2×Naak 500ml (2 sachets)</span></div>
+        <div class="nutri-line"><span class="nutri-label">Poche</span><span class="nutri-val">2 gels Baouw + 1 Clif Bar</span></div>
+        <div class="nutri-line"><span class="nutri-label">Sel</span><span class="nutri-val">8 SaltStick (1 toutes 45min)</span></div>
+        <div class="nutri-gluc">~58g/h · 3h05 de course</div>
+      </div></td>
+      <td><span class="note">Nuit, adrénaline → résiste. Rythme volontairement lent.</span></td>
+      <td><span class="t25">04:10</span></td>
+      <td><span class="tr25 neutral">05:05</span></td>
+    </tr>
+
+    <tr class="r-section"><td colspan="12"><span class="section-label">Montée Brévent → Traverse Balcon Sud · Gradient 15-27% sur km 3-8</span></td></tr>
+
+    <tr>
+      <td><span class="cp">Planpraz</span></td>
+      <td class="r"><span class="km">12,7</span></td>
+      <td><div class="dplus">↑1601m</div><div class="dminus">↓603m</div></td>
+      <td><span class="rav">✦ complet</span></td>
+      <td><span class="t-target">08:10</span><span class="t-elapsed">3h05</span></td>
+      <td>—</td>
+      <td><span class="mg-none">—</span></td>
+      <td class="r"><span class="pace">14:38/km</span></td>
+      <td><div class="nutri-box">
+        <div class="nutri-line"><span class="nutri-label">Recharge</span><span class="nutri-val">Refaire 2×Naak + manger au ravito (soupe, riz)</span></div>
+        <div class="nutri-line"><span class="nutri-label">Poche</span><span class="nutri-val">2 gels Baouw + recharge SaltStick</span></div>
+        <div class="nutri-line"><span class="nutri-label">Prochain parent</span><span class="nutri-val">Buet (km 28,5) → tenir 2h55</span></div>
+        <div class="nutri-gluc">~62g/h section Planpraz→Buet</div>
+      </div></td>
+      <td><span class="note">Manger complet. Départ volontairement plus lent qu'en 2025.</span></td>
+      <td><span class="t25">07:05</span></td>
+      <td><span class="tr25 neutral">08:00</span><span class="tr25-sub">km≠ (13,6km en 2025)</span></td>
+    </tr>
+
+    <tr>
+      <td><span class="cp">Flégère</span></td>
+      <td class="r"><span class="km">18,0</span></td>
+      <td><div class="dplus">↑140m</div><div class="dminus">↓151m</div></td>
+      <td>—</td>
+      <td><span class="t-target">09:05</span><span class="t-elapsed">4h00</span></td>
+      <td><span class="t-bh">09:35</span></td>
+      <td><span class="mg mg-ok">+30 min</span></td>
+      <td class="r"><span class="pace">10:32/km</span></td>
+      <td><div class="nutri-box">
+        <div class="nutri-line"><span class="nutri-label">En route</span><span class="nutri-val">1 gel Baouw (col Flégère)</span></div>
+        <div class="nutri-line"><span class="nutri-label">Boire</span><span class="nutri-val">Naak continu, 1 SaltStick</span></div>
+        <div class="nutri-gluc">Traverse légère, ne pas surcharger</div>
+      </div></td>
+      <td><span class="note">BH : 9h35. Traversée aérienne, attention neige.</span></td>
+      <td><span class="t25">07:57</span></td>
+      <td><span class="tr25 good">08:52</span><span class="tr25-sub good">BH 9h35 → +43min ✓</span></td>
+    </tr>
+
+    <tr class="r-section"><td colspan="12"><span class="section-label">Descente Col des Montets (-24% km 23-25) → Buet · En 2026 : PAS de Loriaz → ~300m D+ et ~4km économisés ✓</span></td></tr>
+
+    <tr class="r-parents">
+      <td><span class="cp">Buet</span><span class="badge-parents">👥 Parents</span></td>
+      <td class="r"><span class="km">28,5</span></td>
+      <td><div class="dplus">↑338m</div><div class="dminus">↓856m</div></td>
+      <td><span class="rav">✦ complet</span></td>
+      <td><span class="t-target">11:05</span><span class="t-elapsed">6h00</span></td>
+      <td><span class="t-bh">11:35</span></td>
+      <td><span class="mg mg-ok">+30 min</span></td>
+      <td class="r"><span class="pace">11:19/km</span></td>
+      <td><div class="nutri-box">
+        <div class="nutri-parents">👥 Rechargement parents ici</div>
+        <div class="nutri-line"><span class="nutri-label">Flasques</span><span class="nutri-val">Refaire 2×Naak (parents)</span></div>
+        <div class="nutri-line"><span class="nutri-label">Ravito</span><span class="nutri-val">1 Clif Bar + soupe/riz</span></div>
+        <div class="nutri-line"><span class="nutri-label">Poche</span><span class="nutri-val">2 gels Baouw + 6 SaltStick (parents)</span></div>
+        <div class="nutri-line"><span class="nutri-label">Next stop</span><span class="nutri-val">👥 La Villaz km 35,1 → 1h35</span></div>
+        <div class="nutri-gluc">~47g/h section courte Buet→La Villaz</div>
+      </div></td>
+      <td><span class="note ok">Parents = recharge complète. S'asseoir 3-4 min max.</span></td>
+      <td><span class="t25">09:45</span></td>
+      <td><span class="tr25 good">10:40</span><span class="tr25-sub good">BH 11h35 → +55min ✓</span></td>
+    </tr>
+
+    <tr class="r-parents">
+      <td><span class="cp">La Villaz</span><span class="badge-parents">👥 Parents</span></td>
+      <td class="r"><span class="km">35,1</span></td>
+      <td><div class="dplus">↑447m</div><div class="dminus">↓463m</div></td>
+      <td>—</td>
+      <td><span class="t-target">12:40</span><span class="t-elapsed">7h35</span></td>
+      <td><span class="t-bh">13:05</span></td>
+      <td><span class="mg mg-ok">+25 min</span></td>
+      <td class="r"><span class="pace">14:17/km</span></td>
+      <td><div class="nutri-box">
+        <div class="nutri-parents">👥 Rechargement parents ici</div>
+        <div class="nutri-line"><span class="nutri-label">FLASQUES</span><span class="nutri-val">2×Naak PLEINES (col du Passet!)</span></div>
+        <div class="nutri-line"><span class="nutri-label">Poche</span><span class="nutri-val">2 gels Baouw + 8 SaltStick</span></div>
+        <div class="nutri-line"><span class="nutri-label">Fontaine</span><span class="nutri-val">Remplir flasques ici</span></div>
+        <div class="nutri-line"><span class="nutri-label">Next stop</span><span class="nutri-val">👥 Emosson km 40,6 → 1h55</span></div>
+        <div class="nutri-gluc">~75g/h section critique La Villaz→Emosson</div>
+        <div class="nutri-warn">⚠ Col du Passet dans 300m</div>
+      </div></td>
+      <td><span class="note warn">BH : 13h05. Fontaine + parents. Col du Passet commence immédiatement.</span></td>
+      <td><span class="t25">12:11</span></td>
+      <td><span class="tr25 fail">13:06</span><span class="tr25-sub fail">BH 13h05 → −1min (km≠: 39km/2025)</span></td>
+    </tr>
+
+    <tr class="r-section"><td colspan="12"><span class="section-label">⚠ ZONE CRITIQUE 1 — Col du Passet 26-27% net (max 50%) · Cause des crampes 2025</span></td></tr>
+
+    <tr class="r-critical r-parents">
+      <td><span class="cp">Emosson</span><span class="badge-parents">👥 Parents</span></td>
+      <td class="r"><span class="km">40,6</span></td>
+      <td><div class="dplus">↑756m</div><div class="dminus">↓377m</div></td>
+      <td><span class="rav">✦ complet</span></td>
+      <td><span class="t-target">14:35</span><span class="t-elapsed">9h30</span></td>
+      <td><span class="t-bh">15:05</span></td>
+      <td><span class="mg mg-ok">+30 min</span></td>
+      <td class="r"><span class="pace slow">21:26/km ▼</span></td>
+      <td><div class="nutri-box">
+        <div class="nutri-parents">👥 DERNIER RECHARGEMENT PARENTS</div>
+        <div class="nutri-line"><span class="nutri-label">FLASQUES</span><span class="nutri-val">2×Naak PLEINES (max liquidité)</span></div>
+        <div class="nutri-line"><span class="nutri-label">Ravito</span><span class="nutri-val">Manger complet (soupe, riz) + 1 Clif Bar</span></div>
+        <div class="nutri-line"><span class="nutri-label">Poche</span><span class="nutri-val">2 gels Baouw + 1 Clif Bar + 10 SaltStick</span></div>
+        <div class="nutri-gluc">~72g/h · flasques Emosson durent jusqu'aux Esserts (7,8km!)</div>
+        <div class="nutri-warn">🔴 PAS D'EAU au Châtelard ni entre ici et Les Esserts → REMPLIR TOUT</div>
+      </div></td>
+      <td><span class="note warn">GPX km 36-38 = 26-27% net (max 50%). Aller PLUS LENTEMENT qu'en 2025. Préserver les jambes pour la descente.</span></td>
+      <td><span class="t25">13:59</span></td>
+      <td><span class="tr25 tight">14:54</span><span class="tr25-sub tight">BH 15h05 → +11min ⚠ (km≠)</span></td>
+    </tr>
+
+    <tr class="r-section"><td colspan="12"><span class="section-label">⚠ ZONE CRITIQUE 2 — Descente Emosson −30% (max −36%) · 866m D- en 4km · Eau manquée en 2025 ici</span></td></tr>
+
+    <tr class="r-critical">
+      <td><span class="cp">Le Châtelard</span></td>
+      <td class="r"><span class="km">44,7</span></td>
+      <td><div class="dplus">↑37m</div><div class="dminus">↓822m</div></td>
+      <td>—</td>
+      <td><span class="t-target">15:45</span><span class="t-elapsed">10h40</span></td>
+      <td><span class="t-bh">16:05</span></td>
+      <td><span class="mg mg-tight">+20 min</span></td>
+      <td class="r"><span class="pace fast">17:09/km ▲</span></td>
+      <td><div class="nutri-box">
+        <div class="nutri-line"><span class="nutri-label">En route</span><span class="nutri-val">Continuer Naak (flasques Emosson)</span></div>
+        <div class="nutri-line"><span class="nutri-label">Poche</span><span class="nutri-val">Manger 1 gel avant de repartir</span></div>
+        <div class="nutri-line"><span class="nutri-label">Sel</span><span class="nutri-val">2 SaltStick (descente intense = sueur)</span></div>
+        <div class="nutri-warn">⚠ PAS DE RAVITO EAU ICI — boire flasques Emosson</div>
+        <div class="nutri-gluc">km 44-45 = 58% max → manger avant de monter</div>
+      </div></td>
+      <td><span class="note warn">BH le + serré (+20min). Pas d'eau ici. Manger avant de repartir, km 44-45 = 58% de gradient!</span></td>
+      <td><span class="t25">15:31</span></td>
+      <td><span class="tr25 fail">16:26</span><span class="tr25-sub fail">BH 16h05 → −21min (km≠)</span></td>
+    </tr>
+
+    <tr class="r-section"><td colspan="12"><span class="section-label">⚠ ZONE CRITIQUE 3 — Châtelard → Tête de Balme · km 44-45 = 58% max · +1171m en 6,8km sans eau</span></td></tr>
+
+    <tr>
+      <td><span class="cp">Les Esserts</span></td>
+      <td class="r"><span class="km">48,4</span></td>
+      <td><div class="dplus">↑503m</div><div class="dminus">↓0m</div></td>
+      <td><span class="rav">✦ complet</span></td>
+      <td><span class="t-target">16:35</span><span class="t-elapsed">11h30</span></td>
+      <td>—</td>
+      <td><span class="mg-none">—</span></td>
+      <td class="r"><span class="pace">14:17/km</span></td>
+      <td><div class="nutri-box">
+        <div class="nutri-line"><span class="nutri-label">RECHARGE</span><span class="nutri-val">Refaire 2×Naak PLEINES</span></div>
+        <div class="nutri-line"><span class="nutri-label">Ravito</span><span class="nutri-val">Manger au point (soupe si dispo)</span></div>
+        <div class="nutri-line"><span class="nutri-label">Poche</span><span class="nutri-val">2 purées Baouw + 1 gel + 6 SaltStick</span></div>
+        <div class="nutri-gluc">~67g/h section Esserts→Le Tour (2h55)</div>
+      </div></td>
+      <td><span class="note">Premier point eau après Emosson (7,8km). Ne pas sauter même si encore des réserves.</span></td>
+      <td><span class="t25">—</span></td>
+      <td><span class="tr25 neutral">—</span></td>
+    </tr>
+
+    <tr>
+      <td><span class="cp">Le Tour</span></td>
+      <td class="r"><span class="km">60,1</span></td>
+      <td><div class="dplus">↑823m</div><div class="dminus">↓1004m</div></td>
+      <td><span class="rav">✦ complet</span></td>
+      <td><span class="t-target">19:30</span><span class="t-elapsed">14h25</span></td>
+      <td><span class="t-bh">20:20</span></td>
+      <td><span class="mg mg-good">+50 min</span></td>
+      <td class="r"><span class="pace">16:13/km</span></td>
+      <td><div class="nutri-box">
+        <div class="nutri-line"><span class="nutri-label">RECHARGE</span><span class="nutri-val">Refaire 2×Naak</span></div>
+        <div class="nutri-line"><span class="nutri-label">Ravito</span><span class="nutri-val">Soupe + 1 Clif Bar + café si dispo</span></div>
+        <div class="nutri-line"><span class="nutri-label">Poche</span><span class="nutri-val">2 purées Baouw + 4 SaltStick</span></div>
+        <div class="nutri-gluc">~62g/h section Le Tour→Les Bois (2h15)</div>
+      </div></td>
+      <td><span class="note ok">BH : 20h20. Marge récupérée sur Balme. Recharge soignée. Vérifier pieds. Début nuit → café.</span></td>
+      <td><span class="t25">19:38</span></td>
+      <td><span class="tr25 fail">20:33</span><span class="tr25-sub fail">BH 20h20 → −13min (km≠)</span></td>
+    </tr>
+
+    <tr class="r-section"><td colspan="12"><span class="section-label">🔴 ZONE CRITIQUE 4 — Les Bois → Montenvers · 20% gradient (max 42%) · DNF 2025 · Parents dernière fois</span></td></tr>
+
+    <tr class="r-key r-parents">
+      <td><span class="cp">Les Bois</span><span class="badge-parents">👥 Parents</span></td>
+      <td class="r"><span class="km">69,7</span></td>
+      <td><div class="dplus">↑190m</div><div class="dminus">↓713m</div></td>
+      <td><span class="rav">✦ complet</span></td>
+      <td><span class="t-target">21:45</span><span class="t-elapsed">16h40</span></td>
+      <td><span class="t-bh">22:20</span></td>
+      <td><span class="mg mg-ok">+35 min</span></td>
+      <td class="r"><span class="pace">13:57/km</span></td>
+      <td><div class="nutri-box">
+        <div class="nutri-parents">👥 RECHARGEMENT PARENTS — DERNIER POINT</div>
+        <div class="nutri-line"><span class="nutri-label">ACTION</span><span class="nutri-val">S'ASSEOIR. Manger 1 Clif Bar + soupe chaude</span></div>
+        <div class="nutri-line"><span class="nutri-label">FLASQUES</span><span class="nutri-val">2×Naak PLEINES (parents)</span></div>
+        <div class="nutri-line"><span class="nutri-label">Poche</span><span class="nutri-val">2 purées Baouw + 1 gel réserve + 8 SaltStick</span></div>
+        <div class="nutri-gluc">~56g/h section Les Bois→Montenvers (2h30)</div>
+        <div class="nutri-warn">🔴 DNF 2025 ICI. Ne repartir qu'avec réservoirs PLEINS.</div>
+      </div></td>
+      <td><span class="note crit">🔴 DNF 2025 ICI. Eau manquée à Châtelard → réservoirs vides. En 2026 : ravito complet + parents. Tout refaire avant de monter.</span></td>
+      <td><span class="t25">21:51</span></td>
+      <td><span class="tr25 fail">22:46</span><span class="tr25-sub fail">BH 22h20 → −26min (km≠)</span></td>
+    </tr>
+
+    <tr class="r-key">
+      <td><span class="cp">Montenvers</span></td>
+      <td class="r"><span class="km">75,2</span></td>
+      <td><div class="dplus">↑825m</div><div class="dminus">↓11m</div></td>
+      <td><span class="rav">✦ complet</span></td>
+      <td><span class="t-target">00:15</span><span class="t-elapsed">19h10</span></td>
+      <td><span class="t-bh">00:50</span></td>
+      <td><span class="mg mg-ok">+35 min</span></td>
+      <td class="r"><span class="pace slow">27:16/km</span></td>
+      <td><div class="nutri-box">
+        <div class="nutri-line"><span class="nutri-label">RECHARGE</span><span class="nutri-val">Refaire 2×Naak + soupe chaude obligatoire</span></div>
+        <div class="nutri-line"><span class="nutri-label">Poche</span><span class="nutri-val">1 purée Baouw + 4 SaltStick</span></div>
+        <div class="nutri-line"><span class="nutri-label">Caféine</span><span class="nutri-val">Café au ravito si disponible (nuit)</span></div>
+        <div class="nutri-gluc">~71g/h section Montenvers→Plan Aiguille (1h45)</div>
+      </div></td>
+      <td><span class="note ok">Jamais atteint en 2025. 27:16/km = 2h30 pour 5,5km. Marcher méthodiquement. Tout recharger ici.</span></td>
+      <td><span class="t25 abandon">ABANDON</span></td>
+      <td><span class="tr25 abandon">ABANDON</span></td>
+    </tr>
+
+    <tr class="r-section"><td colspan="12"><span class="section-label">Plan Aiguille → Descente finale · −16 à −22% sur 7,6km · Zone critique 5</span></td></tr>
+
+    <tr>
+      <td><span class="cp">Plan de l'Aiguille</span></td>
+      <td class="r"><span class="km">81,2</span></td>
+      <td><div class="dplus">↑467m</div><div class="dminus">↓181m</div></td>
+      <td><span class="rav">✦ complet</span></td>
+      <td><span class="t-target">02:00</span><span class="t-elapsed">20h55</span></td>
+      <td><span class="t-bh">02:50</span></td>
+      <td><span class="mg mg-good">+50 min</span></td>
+      <td class="r"><span class="pace">17:38/km</span></td>
+      <td><div class="nutri-box">
+        <div class="nutri-line"><span class="nutri-label">RECHARGE</span><span class="nutri-val">1×Naak + soupe</span></div>
+        <div class="nutri-line"><span class="nutri-label">Caféine</span><span class="nutri-val">☕ CAFÉ OBLIGATOIRE avant descente</span></div>
+        <div class="nutri-line"><span class="nutri-label">Poche</span><span class="nutri-val">1 gel Baouw + 4 SaltStick</span></div>
+        <div class="nutri-gluc">~51g/h · 1h05 restant · descente −1154m</div>
+      </div></td>
+      <td><span class="note">Dernier ravito. 7,6km à −20% moy. Café + bâtons obligatoires. Marge +50min sur BH = ne pas se précipiter.</span></td>
+      <td><span class="t25">—</span></td>
+      <td><span class="tr25 neutral">—</span></td>
+    </tr>
+
+    <tr class="r-arrivee">
+      <td><span class="cp arrivee">Arrivée Chamonix</span></td>
+      <td class="r"><span class="km">88,8</span></td>
+      <td><div class="dplus">↑10m</div><div class="dminus">↓1154m</div></td>
+      <td>—</td>
+      <td><span class="t-target" style="color:#16a36b;font-size:15px;">03:05</span><span class="t-elapsed">22h00</span></td>
+      <td><span class="t-bh">05:05</span></td>
+      <td><span class="mg mg-good">+2h00</span></td>
+      <td class="r"><span class="pace fast">8:42/km</span></td>
+      <td><div class="nutri-box">
+        <div class="nutri-line"><span class="nutri-label">Finisher</span><span class="nutri-val">🏁 Objectif atteint</span></div>
+        <div class="nutri-gluc">Total glucides course : ~1300-1400g · ~63g/h moy.</div>
+      </div></td>
+      <td><span class="note ok">🏁 22h de course. Bâtons + petits pas en descente. Marge de 2h = serein.</span></td>
+      <td><span class="t25">—</span></td>
+      <td><span class="tr25 neutral">—</span></td>
+    </tr>
+
+  </tbody>
+</table>
+</div>
+</div>
+
+<div class="callout">
+  <strong>¹ Colonne "2025 → base 5h05" :</strong> temps 2025 décalés de +55 min (départ réel 4h10 → vague 3 à 5h05). Les cases rouges ne signifient pas que tu aurais été coupé — les km sont différents entre éditions (2025 = 92km avec Loriaz, 2026 = 88,8km sans Loriaz). En corrigeant l'effet distance, ta marge réelle 2025 (base 5h05) sur les BH 2026 aurait été de <strong>+30 à +40 min jusqu'au Tour</strong> — puis effondrée aux Bois uniquement à cause de l'eau manquée à Châtelard.
+</div>
+
+<div class="insights">
+  <div class="ins red-b">
+    <div class="ins-title red">⚠ Les deux erreurs fatales de 2025</div>
+    <ul>
+      <li><strong>Eau manquée à Châtelard (km 48,5)</strong> : pas de point eau entre Emosson et Les Esserts. Départ sur Balme sans eau → déshydratation → glycémie effondrée (FC 99 bpm) → abandon aux Bois. En 2026 : même contrainte → <strong>remplir tout à Emosson (parents)</strong>.</li>
+      <li><strong>Col du Passet 30% trop rapide</strong> : 18:44/km réel vs 21:26/km cible. Crampes dès km 36. En 2026 : accepter 21:26/km même si ça semble lent. Les jambes paieront à km 40 sinon.</li>
+      <li><strong>Sodium quasi nul</strong> : gels Baouw = 0,01g sel chacun. Avec des crampes à partir du Col du Passet, la carence en sodium est une cause directe. En 2026 : <strong>1 SaltStick toutes les 45 min</strong> sur les montées.</li>
+    </ul>
+  </div>
+  <div class="ins purple-b">
+    <div class="ins-title purple">👥 Stratégie support parents — 4 points</div>
+    <ul>
+      <li><strong>Buet (km 28,5 · 11h05)</strong> — Recharge flasques Naak + gel + sel. Durée : 3-4 min. Puis section légère La Villaz (1h35).</li>
+      <li><strong>La Villaz (km 35,1 · 12h40)</strong> — Recharge MAXIMALE. 2 flasques Naak pleines impératives → Col du Passet dans 300m. 5 min ici.</li>
+      <li><strong>Emosson (km 40,6 · 14h35)</strong> — PLUS IMPORTANT. Dernier point parents. Flasques pleines + Clif Bar + 10 SaltStick. Elles durent jusqu'aux Esserts (7,8km sans eau).</li>
+      <li><strong>Les Bois (km 69,7 · 21h45)</strong> — Dernier ravito parents. S'asseoir, Clif Bar + soupe, flasques pleines, gel de réserve en poche. Ne repartir que quand tout est rechargé.</li>
+    </ul>
+  </div>
+  <div class="ins green-b">
+    <div class="ins-title green">✓ Stratégie nutrition — principes clés</div>
+    <ul>
+      <li><strong>Naak Ultra Energy = base obligatoire</strong> : 1 sachet/flasque (500ml). Multi-transporteurs (dextrose + malto + isomaltulose) + électrolytes 650mg. Objectif : 55g glucides + sodium/h via boisson.</li>
+      <li><strong>Gels Baouw = complément texture</strong> : 1 gel toutes les 60-90 min entre les Naak. 30-35g glucides supplémentaires. Ne pas en faire la source principale (mono-fructose).</li>
+      <li><strong>Purées Baouw = nuit et sections lentes</strong> : à partir de Le Tour (km 60). Digestes, rassasiantes, idéales quand mâcher est difficile.</li>
+      <li><strong>Clif Bars = ravitos assis uniquement</strong> : 5g fibres → éviter pendant effort intense. Buet, Emosson, Le Tour, Les Bois = moments idéaux.</li>
+      <li><strong>SaltStick = 1 toutes les 45 min</strong> sur montées et chaleur. Compense l'absence de sodium dans les Baouw. Clé pour prévenir les crampes.</li>
+      <li><strong>Total estimé : ~63g/h sur 22h</strong> = 1300-1400g glucides totaux. Dans les recommandations pour un ultra-trail avec mix multi-transporteurs.</li>
+    </ul>
+  </div>
+  <div class="ins blue-b">
+    <div class="ins-title blue">📋 Dotation de course — résumé</div>
+    <ul>
+      <li><strong>Naak Ultra Energy</strong> : 18-20 sachets (parents resupply aux 4 points → environ 4-5 sachets entre chaque point parent)</li>
+      <li><strong>Gels Baouw</strong> (3 parfums) : 15-18 gels total (parents resupply × 4 points)</li>
+      <li><strong>Purées Baouw</strong> (énergétique + nutritionnelle) : 8-10 gourdes (surtout à partir de Le Tour)</li>
+      <li><strong>Clif Bars</strong> (3 parfums) : 6-8 barres total (1 par ravito complet)</li>
+      <li><strong>SaltStick</strong> : 50-60 comprimés (parents resupply avec recharges)</li>
+      <li><strong>Café</strong> : profiter des ravitos Le Tour, Montenvers, Plan de l'Aiguille</li>
+      <li><strong>Food ravitos</strong> : soupe, riz, pomme de terre — priorité sur tout en deuxième moitié</li>
+    </ul>
+  </div>
+  <div class="ins amber-b">
+    <div class="ins-title amber">⏱ Comparatif allures 2025 → 2026</div>
+    <ul>
+      <li><strong>La Villaz→Emosson</strong> : 2025 = 18:44/km / 2026 cible = 21:26/km. Volontairement plus lent (+2:42/km).</li>
+      <li><strong>Emosson→Châtelard</strong> : 2025 = 18:06/km / 2026 cible = 17:09/km. Si jambes préservées, cette descente récupère de la marge.</li>
+      <li><strong>Bois→Montenvers</strong> : 2025 = abandon / 2026 cible = 27:16/km sur 2h30. Faisable avec ravito complet aux Bois.</li>
+      <li><strong>Première moitié globale</strong> : 1:14 à 2:14 min/km plus lent qu'en 2025. C'est intentionnel et nécessaire.</li>
+    </ul>
+  </div>
+  <div class="ins" style="border-color:#d1d5db;">
+    <div class="ins-title" style="color:#374151;">📊 D+ / D- par section — récapitulatif</div>
+    <ul>
+      <li><strong>Départ → Planpraz</strong> : ↑1601m / ↓603m — La plus grosse montée unique</li>
+      <li><strong>Planpraz → Flégère</strong> : ↑140m / ↓151m — Traversée légère</li>
+      <li><strong>Flégère → Buet</strong> : ↑338m / ↓856m — Descente Col des Montets</li>
+      <li><strong>Buet → La Villaz</strong> : ↑447m / ↓463m — Sans Loriaz en 2026 ✓</li>
+      <li><strong>La Villaz → Emosson</strong> : ↑756m / ↓377m — Col du Passet</li>
+      <li><strong>Emosson → Châtelard</strong> : ↑37m / ↓822m — Descente brutale</li>
+      <li><strong>Châtelard → Les Esserts</strong> : ↑503m / ↓0m — 58% max km 44-45</li>
+      <li><strong>Les Esserts → Le Tour</strong> : ↑823m / ↓1004m — Balme loop</li>
+      <li><strong>Le Tour → Les Bois</strong> : ↑190m / ↓713m — Descente douce</li>
+      <li><strong>Les Bois → Montenvers</strong> : ↑825m / ↓11m — 42% max km 71-72</li>
+      <li><strong>Montenvers → Plan Aiguille</strong> : ↑467m / ↓181m — Traverse haute</li>
+      <li><strong>Plan Aiguille → Arrivée</strong> : ↑10m / ↓1154m — Descente finale</li>
+    </ul>
+  </div>
+</div>
+
+<div class="footnote">
+  <strong>Sources :</strong> GPX officiel 2026 (4502 pts, 86,8km GPS / 6384m D+) · GPX Strava 2025 Gaël BERINGUET (63706 pts, FC incluse) · Tableau officiel MMB 2026 (BH et distances) · LiveTrail MMB 2025 (temps de passage) · Fiches produits i-run.fr (Baouw, Clif Bar, Naak) · Départ 2025 confirmé à 4h10, transposition +55 min. <strong>Note :</strong> les recommandations nutritionnelles sont basées sur les données produits et la littérature générale. Consulter un médecin du sport pour validation personnalisée.
+</div>
+
+<script>
+const eleKm=[1043.1,1092.6,1176.1,1268.0,1459.5,1669.6,1938.1,2084.0,2260.2,2329.2,2447.7,2290.3,2072.5,2056.4,1923.9,1841.4,1866.0,1863.0,1853.2,1928.4,1953.5,2103.6,2070.1,2008.4,1765.8,1512.3,1431.0,1400.8,1368.4,1503.8,1552.3,1611.0,1738.8,1581.8,1378.4,1339.0,1309.7,1569.4,1842.1,1925.9,1997.9,1744.2,1442.7,1271.6,1117.4,1365.1,1524.3,1640.3,1773.7,1903.0,2071.0,2279.8,2238.8,2085.4,1992.8,2053.5,1914.0,1694.3,1511.8,1492.3,1475.3,1382.6,1274.2,1268.7,1296.6,1218.8,1237.6,1152.0,1089.2,1152.8,1356.5,1502.4,1685.1,1872.4,1964.4,2163.3,2125.3,2107.8,2139.5,2184.0,2124.6,1960.3,1796.8,1627.5,1461.6,1259.5,1036.6,1040.4,1040.4];
+const gradKm=[5.0,8.3,9.2,19.1,21.0,26.9,14.6,17.6,6.9,11.8,-15.7,-21.8,-1.6,-13.2,-8.2,2.5,-0.3,-1.0,7.5,2.5,15.0,-3.4,-6.2,-24.3,-25.4,-8.1,-3.0,-3.2,13.5,4.8,5.9,12.8,-15.7,-20.3,-3.9,-2.9,26.0,27.3,8.4,7.2,-25.4,-30.1,-17.1,-15.4,24.8,15.9,11.6,13.3,12.9,16.8,20.9,-4.1,-15.3,-9.3,6.1,-13.9,-22.0,-18.2,-1.9,-1.7,-9.3,-10.8,-0.6,2.8,-7.8,1.9,-8.6,-6.3,6.4,20.4,14.6,18.3,18.7,9.2,19.9,-3.8,-1.8,3.2,4.5,-5.9,-16.4,-16.4,-16.9,-16.6,-20.2,-22.3,0.4,0.0];
+function gradColor(g){if(g>=25)return'#7f1d1d';if(g>=18)return'#dc2626';if(g>=12)return'#f97316';if(g>=5)return'#fbbf24';if(g>=-2)return'#d1d5db';if(g>=-8)return'#93c5fd';if(g>=-15)return'#3b82f6';return'#1d4ed8';}
+const canvas=document.getElementById('profileChart');
+function drawProfile(){
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.parentElement.clientWidth;
+  const H=280;
+  canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  const pad={l:46,r:14,t:16,b:44};
+  const cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;
+  const nKm=eleKm.length-1;
+  const eMin=950,eMax=2550;
+  function xK(km){return pad.l+(km/nKm)*cW;}
+  function yE(e){return pad.t+cH-(e-eMin)/(eMax-eMin)*cH;}
+  ctx.strokeStyle='#f0f2f7';ctx.lineWidth=1;
+  [1000,1200,1400,1600,1800,2000,2200,2400].forEach(e=>{const y=yE(e);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cW,y);ctx.stroke();ctx.fillStyle='#c4c9d6';ctx.font='9px Inter';ctx.textAlign='right';ctx.fillText(e+'m',pad.l-3,y+3);});
+  [0,10,20,30,40,50,60,70,80,88].forEach(km=>{const x=xK(km);ctx.strokeStyle='#f0f2f7';ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+cH);ctx.stroke();ctx.fillStyle='#c4c9d6';ctx.font='9px Inter';ctx.textAlign='center';ctx.fillText('km'+km,x,pad.t+cH+12);});
+  // Critical zones
+  [[35.1,40.6,'rgba(220,38,38,0.08)','Col Passet'],[40.6,44.7,'rgba(249,115,22,0.1)','Desc.'],[44.7,51.5,'rgba(251,191,36,0.1)','Balme'],[69.7,75.2,'rgba(220,38,38,0.12)','Montenvers'],[80,86,'rgba(59,130,246,0.07)','Desc. finale']].forEach(z=>{
+    ctx.fillStyle=z[2];ctx.fillRect(xK(z[0]),pad.t,xK(z[1])-xK(z[0]),cH);
+    ctx.fillStyle='rgba(30,30,30,0.5)';ctx.font='bold 8px Inter';ctx.textAlign='center';ctx.fillText(z[3],xK((z[0]+z[1])/2),pad.t+9);
+  });
+  // Parents markers (vertical purple lines)
+  [28.5,35.1,40.6,69.7].forEach(km=>{
+    const x=xK(km);
+    ctx.strokeStyle='#7c3aed';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+cH);ctx.stroke();
+    ctx.setLineDash([]);ctx.fillStyle='#7c3aed';ctx.font='bold 8px Inter';ctx.textAlign='center';
+    ctx.fillText('👥',x,pad.t+cH+22);
+  });
+  // Gradient fill
+  const baseY=yE(eMin);
+  for(let km=0;km<nKm;km++){
+    const g=gradKm[km];const x1=xK(km),x2=xK(km+1);const y1=yE(eleKm[km]),y2=yE(eleKm[km+1]);
+    ctx.fillStyle=gradColor(g);ctx.globalAlpha=0.55;
+    ctx.beginPath();ctx.moveTo(x1,baseY);ctx.lineTo(x1,y1);ctx.lineTo(x2,y2);ctx.lineTo(x2,baseY);ctx.closePath();ctx.fill();
+  }
+  ctx.globalAlpha=1;
+  // Elevation line
+  ctx.beginPath();ctx.strokeStyle='#374151';ctx.lineWidth=1.5;
+  eleKm.forEach((e,km)=>{km===0?ctx.moveTo(xK(km),yE(e)):ctx.lineTo(xK(km),yE(e));});ctx.stroke();
+  // Checkpoints
+  const cps=[{km:0,n:'Départ'},{km:12.7,n:'Planpraz'},{km:18,n:'Flégère'},{km:28.5,n:'Buet'},{km:35.1,n:'La Villaz'},{km:40.6,n:'Emosson'},{km:44.7,n:'Châtelard'},{km:60.1,n:'Le Tour'},{km:69.7,n:'Les Bois'},{km:75.2,n:'Montenvers'},{km:81.2,n:'Pl. Aig.'},{km:88,n:'Arrivée'}];
+  cps.forEach((cp,i)=>{
+    const km=Math.min(cp.km,88);const x=xK(km);const e=eleKm[Math.round(km)];const y=yE(e);
+    ctx.setLineDash([2,2]);ctx.strokeStyle='#9aa3b8';ctx.lineWidth=0.8;ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+cH);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#3b6fd4';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#374151';ctx.font='bold 8.5px Inter';ctx.textAlign='center';
+    ctx.fillText(cp.n,x,i%2===0?y-7:y+15);
+  });
+  // DNF marker
+  const ax=xK(69.7);
+  ctx.strokeStyle='#dc2626';ctx.lineWidth=2;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(ax,pad.t);ctx.lineTo(ax,pad.t+cH);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#dc2626';ctx.font='bold 8px Inter';ctx.textAlign='left';ctx.fillText('2025 ✗',ax+3,pad.t+20);
+}
+function buildHeatmap(){
+  const row=document.getElementById('heatmapRow');const labels=document.getElementById('heatmapLabels');
+  gradKm.forEach((g,km)=>{
+    const cell=document.createElement('div');cell.className='hm-cell';
+    const intensity=Math.min(Math.abs(g)/30,1);const h=Math.round(12+intensity*20);
+    cell.style.background=gradColor(g);cell.style.height=h+'px';cell.style.marginTop=(32-h)+'px';cell.style.opacity=0.5+intensity*0.5;
+    cell.title='km '+(km)+'-'+(km+1)+' : '+(g>0?'+':'')+g.toFixed(1)+'%';row.appendChild(cell);
+    const lbl=document.createElement('div');lbl.style.cssText='width:9px;font-size:7px;color:#9aa3b8;text-align:center;flex-shrink:0;';
+    if(km%10===0){lbl.textContent=km;lbl.style.fontWeight='600';lbl.style.color='#6b7a99';}
+    labels.appendChild(lbl);
+  });
+}
+window.addEventListener('load',()=>{drawProfile();buildHeatmap();});
+window.addEventListener('resize',drawProfile);
+</script>
+</body>
+</html>
