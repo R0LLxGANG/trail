@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>90km MMB 2026 — Gaël BERINGUET</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#f4f6f9;color:#1a2033;font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;}
+  .wrap{max-width:1700px;margin:0 auto;padding:0 16px 40px;}
+  .topbar{background:#0f1929;color:#fff;padding:16px 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15);}
+  .topbar-inner{max-width:1700px;margin:0 auto;}
+  .tb-title{font-size:18px;font-weight:800;}
+  .tb-sub{font-size:11px;color:#94a3c4;margin-top:2px;}
+  .tabs{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap;}
+  .tab{padding:9px 15px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#1c2840;color:#94a3c4;border:none;transition:all .15s;display:flex;align-items:center;gap:6px;}
+  .tab:hover{background:#26344f;color:#cdd8ee;}.tab.active{background:#3b6fd4;color:#fff;}
+  .tab .ic{font-size:15px;}
+  .view{display:none;padding-top:18px;}.view.active{display:block;}
+  .sec-title{font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#6b7a99;margin-bottom:10px;margin-top:20px;border-left:3px solid #3b6fd4;padding-left:10px;}
+  .card{background:#fff;border-radius:12px;border:1px solid #e2e6ed;overflow:hidden;margin-bottom:14px;}
+  .stat-row{display:flex;border:1px solid #e2e6ed;border-radius:10px;overflow:hidden;flex-wrap:wrap;background:#fff;margin-bottom:14px;}
+  .stat{padding:12px 18px;text-align:center;border-right:1px solid #e2e6ed;flex:1;min-width:90px;}
+  .stat-label{font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#9aa3b8;margin-bottom:3px;}
+  .stat-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:#0f1929;}
+  .stat-val.blue{color:#3b6fd4;}.stat-val.green{color:#16a36b;}
+  .chart-card{background:#fff;border-radius:12px;border:1px solid #e2e6ed;padding:16px 18px;margin-bottom:14px;}
+  canvas{display:block;width:100%;}
+  .grad-legend{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+  .grad-legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#6b7a99;}
+  .grad-dot{width:10px;height:10px;border-radius:2px;}
+  .hm-cell{width:9px;height:32px;border-radius:2px;flex-shrink:0;}
+  .sections-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;}
+  .sec-card{background:#fff;border-radius:8px;border:1px solid #e2e6ed;padding:10px;}
+  .sec-card.extreme{border-top:3px solid #dc2626;}.sec-card.high{border-top:3px solid #ea580c;}.sec-card.medium{border-top:3px solid #3b82f6;}
+  .sec-num{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9aa3b8;}
+  .sec-name{font-size:12px;font-weight:700;color:#0f1929;margin:2px 0 4px;line-height:1.3;}
+  .sec-km{font-family:'JetBrains Mono',monospace;font-size:10px;color:#3b6fd4;margin-bottom:5px;}
+  .sec-stat{font-size:10px;color:#4b5680;margin-bottom:2px;}.sec-stat strong{color:#0f1929;}
+  .sec-tip{font-size:10px;color:#4b5680;line-height:1.4;border-top:1px solid #f0f2f7;padding-top:5px;margin-top:4px;}.sec-tip strong{color:#dc2626;}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  thead th{background:#f0f3f9;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7a99;padding:9px;text-align:left;white-space:nowrap;border-bottom:2px solid #e2e6ed;}
+  thead th.r{text-align:right;}
+  tbody td{padding:9px;vertical-align:top;border-bottom:1px solid #eef0f5;}
+  tbody td.r{text-align:right;}
+  tr.r-depart td{background:#eef4ff;}tr.r-arrivee td{background:#edfaf4;}tr.r-critical td{background:#fff8f0;}tr.r-key td{background:#f0fdf8;}tr.r-parents td{background:#faf5ff;}
+  tr.r-section td{background:#f5f6fa;padding:4px 9px;}
+  .sec-lbl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9aa3b8;}
+  .cp{font-weight:600;font-size:12px;color:#0f1929;white-space:nowrap;}.cp.dep{color:#3b6fd4;}.cp.arr{color:#16a36b;}
+  .bp{display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:#f3e8ff;color:#7c3aed;margin-left:3px;white-space:nowrap;}
+  .noeau{display:inline-block;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:#fee2e2;color:#991b1b;margin-left:3px;}
+  .km{font-family:'JetBrains Mono',monospace;font-size:10px;color:#9aa3b8;font-weight:500;}
+  .rav{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;background:#ddeaff;color:#3b6fd4;white-space:nowrap;}
+  .norav{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;background:#f0f2f7;color:#9aa3b8;white-space:nowrap;}
+  .dp{font-family:'JetBrains Mono',monospace;font-size:10px;color:#16a36b;font-weight:600;}.dm{font-family:'JetBrains Mono',monospace;font-size:10px;color:#3b82f6;font-weight:600;}
+  .tt{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#b06000;}.te{font-family:'JetBrains Mono',monospace;font-size:10px;color:#9aa3b8;display:block;margin-top:1px;}
+  .tbh{font-family:'JetBrains Mono',monospace;font-size:11px;color:#6b7a99;}
+  .mg{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;}
+  .mg-good{background:#d1fae5;color:#065f46;}.mg-ok{background:#dcfce7;color:#166534;}.mg-tight{background:#fef3c7;color:#92400e;}.mg-none{color:#c4c9d6;}.mg-fail{background:#fee2e2;color:#991b1b;}
+  .pace{font-family:'JetBrains Mono',monospace;font-size:11px;color:#6b7a99;}.pace.slow{color:#d97706;}.pace.fast{color:#16a36b;}
+  .nb{font-size:11px;line-height:1.45;min-width:195px;max-width:225px;}
+  .nr{display:flex;gap:5px;margin-bottom:3px;}.ni{font-size:14px;flex-shrink:0;}.nv{font-size:11px;}.nv strong{font-weight:600;}.nv .sub{font-size:10px;color:#9aa3b8;}
+  .gluc{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#3b6fd4;background:#eff6ff;padding:1px 6px;border-radius:3px;margin-top:4px;}
+  .eau-next{font-size:9px;color:#6b7a99;margin-top:3px;display:block;}.eau-next.warn{color:#dc2626;font-weight:600;}
+  .nwarn{font-size:10px;color:#dc2626;font-weight:600;margin-top:3px;}.npar{font-size:10px;color:#7c3aed;font-weight:600;margin-top:3px;}.ncb{font-size:10px;color:#9aa3b8;font-style:italic;}
+  .note{font-size:11px;color:#4b5680;line-height:1.4;max-width:185px;}.note.warn{color:#92400e;font-weight:500;}.note.crit{color:#991b1b;font-weight:600;}.note.ok{color:#065f46;font-weight:500;}
+  .t25{font-family:'JetBrains Mono',monospace;font-size:11px;color:#9aa3b8;}.t25.ab{color:#dc2626;font-weight:700;font-size:10px;}
+  .tr25{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;}.tr25.good{color:#16a36b;}.tr25.tight{color:#d97706;}.tr25.fail{color:#dc2626;}.tr25.neutral{color:#9aa3b8;}.tr25.ab{color:#dc2626;font-size:10px;}
+  .tr25s{font-size:9px;color:#9aa3b8;display:block;font-style:italic;}.tr25s.fail{color:#ef4444;}.tr25s.good{color:#16a36b;}
+  .legend-card{background:#fff;border-radius:10px;border:1px solid #e2e6ed;padding:14px 18px;margin-bottom:14px;}
+  .legend-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .legend-item{display:flex;gap:8px;padding:8px;background:#f8f9fc;border-radius:8px;border:1px solid #eef0f5;}
+  .legend-icon{font-size:20px;flex-shrink:0;}.legend-name{font-size:11px;font-weight:700;color:#0f1929;}.legend-desc{font-size:10px;color:#6b7a99;line-height:1.4;}.legend-val{font-family:'JetBrains Mono',monospace;font-size:10px;color:#3b6fd4;font-weight:600;}
+  .insights{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;}
+  .ins{background:#fff;border:1px solid #e2e6ed;border-radius:10px;padding:13px;}
+  .ins.red-b{border-color:#fca5a5;}.ins.green-b{border-color:#6ee7b7;}.ins.amber-b{border-color:#fcd34d;}.ins.blue-b{border-color:#93c5fd;}.ins.purple-b{border-color:#c4b5fd;}.ins.gray-b{border-color:#d1d5db;}
+  .ins-title{font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-bottom:7px;}
+  .ins-title.red{color:#dc2626;}.ins-title.green{color:#16a36b;}.ins-title.amber{color:#d97706;}.ins-title.blue{color:#3b6fd4;}.ins-title.purple{color:#7c3aed;}.ins-title.gray{color:#374151;}
+  .ins ul{list-style:none;}.ins ul li{font-size:11px;color:#4b5680;padding:4px 0;border-bottom:1px solid #eef0f5;display:flex;gap:6px;line-height:1.4;}.ins ul li:last-child{border-bottom:none;}.ins ul li::before{content:'\2192';color:#c4c9d6;}.ins ul li strong{color:#1a2033;}
+  .callout{background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:11.5px;color:#78350f;line-height:1.6;}.callout strong{color:#451a03;}
+  .footnote{font-size:10px;color:#9aa3b8;border-top:1px solid #e2e6ed;padding-top:10px;line-height:1.7;margin-top:14px;}
+
+  /* AVANT LA COURSE */
+  .prep-hero{background:linear-gradient(135deg,#3b6fd4,#1e40af);color:#fff;border-radius:12px;padding:22px 24px;margin-bottom:16px;}
+  .prep-hero h2{font-size:20px;margin-bottom:8px;}.prep-hero p{font-size:13px;line-height:1.6;opacity:.92;}
+  .prep-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .prep-card{background:#fff;border-radius:12px;border:1px solid #e2e6ed;padding:16px 18px;}
+  .prep-card h3{font-size:14px;color:#0f1929;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+  .prep-card .sub{font-size:11px;color:#9aa3b8;margin-bottom:12px;}
+  .chk-list{list-style:none;}
+  .chk-list li{font-size:13px;color:#1a2033;padding:6px 0;display:flex;gap:9px;line-height:1.5;border-bottom:1px solid #f4f6f9;}
+  .chk-list li:last-child{border-bottom:none;}
+  .chk-list li .box{width:16px;height:16px;border:2px solid #c4c9d6;border-radius:4px;flex-shrink:0;margin-top:2px;}
+  .chk-list li strong{color:#0f1929;}
+  .chk-list li .qty{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#3b6fd4;margin-left:auto;flex-shrink:0;}
+  .bag-card{background:#faf5ff;border:1px solid #c4b5fd;border-radius:10px;padding:14px;margin-bottom:10px;}
+  .bag-title{font-size:13px;font-weight:700;color:#7c3aed;margin-bottom:2px;}
+  .bag-when{font-family:'JetBrains Mono',monospace;font-size:11px;color:#9aa3b8;margin-bottom:8px;}
+  .bag-items{display:flex;flex-wrap:wrap;gap:6px;}
+  .bag-item{font-size:11px;background:#fff;border:1px solid #e2e6ed;border-radius:6px;padding:4px 9px;color:#1a2033;}
+  .timeline-prep{list-style:none;}
+  .timeline-prep li{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #f4f6f9;}
+  .timeline-prep li:last-child{border-bottom:none;}
+  .tl-when{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#3b6fd4;min-width:70px;flex-shrink:0;}
+  .tl-text{font-size:13px;color:#4b5680;line-height:1.5;}.tl-text strong{color:#1a2033;}
+
+  /* EN COURSE */
+  .race-intro{background:#fff;border-radius:12px;border:1px solid #e2e6ed;padding:16px 18px;margin-bottom:14px;}
+  .race-intro h2{font-size:16px;color:#0f1929;margin-bottom:6px;}.race-intro p{font-size:13px;color:#4b5680;line-height:1.6;}
+  .ckpt{background:#fff;border-radius:12px;border:1px solid #e2e6ed;margin-bottom:12px;overflow:hidden;}
+  .ckpt-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #eef0f5;}
+  .ckpt-head.parents{background:#faf5ff;}.ckpt-head.critical{background:#fff8f0;}.ckpt-head.key{background:#fef2f2;}.ckpt-head.depart{background:#eef4ff;}.ckpt-head.arrivee{background:#edfaf4;}
+  .ckpt-name{font-size:18px;font-weight:700;color:#0f1929;}.ckpt-km{font-family:'JetBrains Mono',monospace;font-size:12px;color:#9aa3b8;margin-top:2px;}
+  .ckpt-times{text-align:right;}.ckpt-target{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:#b06000;}.ckpt-bh{font-family:'JetBrains Mono',monospace;font-size:11px;color:#6b7a99;margin-top:2px;}
+  .ckpt-body{padding:14px 16px;}
+  .ckpt-tag{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;margin-right:6px;margin-bottom:8px;}
+  .tag-parents{background:#f3e8ff;color:#7c3aed;}.tag-rav{background:#ddeaff;color:#3b6fd4;}.tag-noeau{background:#fee2e2;color:#991b1b;}.tag-mg{background:#dcfce7;color:#166534;}.tag-mg-tight{background:#fef3c7;color:#92400e;}
+  .ckpt-action{font-size:14px;color:#1a2033;line-height:1.6;}.ckpt-action .big{font-weight:700;color:#0f1929;}
+  .ckpt-nutri{background:#f8f9fc;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px;line-height:1.7;}
+  .ckpt-nutri .nrow{display:flex;gap:8px;align-items:flex-start;}.ckpt-nutri .nic{font-size:16px;flex-shrink:0;}
+  .ckpt-warn{background:#fee2e2;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px;color:#991b1b;font-weight:600;line-height:1.5;}
+  .ckpt-gluc{font-family:'JetBrains Mono',monospace;font-size:11px;color:#3b6fd4;font-weight:700;margin-top:8px;}
+
+  /* PARENTS */
+  .parent-hero{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border-radius:12px;padding:22px 24px;margin-bottom:16px;}
+  .parent-hero h2{font-size:20px;margin-bottom:8px;}.parent-hero p{font-size:13px;line-height:1.6;opacity:.92;}
+  .parent-hero .bib{display:inline-block;background:rgba(255,255,255,.2);padding:4px 12px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:600;margin-top:8px;}
+  .recalc-card{background:#fff;border:2px solid #3b6fd4;border-radius:12px;padding:18px 20px;margin-bottom:16px;}
+  .recalc-card h3{font-size:16px;color:#0f1929;margin-bottom:4px;}
+  .recalc-card .sub{font-size:12px;color:#6b7a99;margin-bottom:14px;line-height:1.5;}
+  .recalc-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;}
+  .rc-field{display:flex;flex-direction:column;gap:4px;}
+  .rc-field label{font-size:11px;font-weight:600;color:#6b7a99;}
+  .rc-field select,.rc-field input{padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;background:#fff;}
+  .rc-btn{padding:10px 20px;background:#3b6fd4;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
+  .rc-btn:hover{background:#2f5cb8;}
+  .rc-status{font-size:14px;font-weight:600;padding:10px 14px;border-radius:8px;margin-bottom:12px;}
+  .rc-status.ahead{background:#d1fae5;color:#065f46;}.rc-status.behind{background:#fef3c7;color:#92400e;}.rc-status.ontime{background:#e0f2fe;color:#075985;}
+  .rc-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .rc-table th{background:#f0f3f9;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7a99;padding:8px 10px;text-align:left;}
+  .rc-table td{padding:8px 10px;border-bottom:1px solid #eef0f5;}
+  .rc-table tr.parent td{background:#faf5ff;}
+  .rc-cp{font-weight:600;color:#0f1929;}
+  .rc-eta{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;color:#b06000;}
+  .rc-mg{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px;}
+  .meet-card{background:#fff;border-radius:12px;border:1px solid #e2e6ed;border-left:4px solid #7c3aed;margin-bottom:14px;overflow:hidden;}
+  .meet-head{padding:16px 18px;background:#faf5ff;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+  .meet-num{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7c3aed;}
+  .meet-name{font-size:20px;font-weight:700;color:#0f1929;}.meet-km{font-family:'JetBrains Mono',monospace;font-size:12px;color:#9aa3b8;}
+  .meet-timing{text-align:right;}.meet-arrival{font-family:'JetBrains Mono',monospace;font-size:13px;color:#6b7a99;}.meet-arrival .big{font-size:22px;font-weight:700;color:#0f1929;display:block;}
+  .meet-window{font-size:11px;color:#7c3aed;font-weight:600;margin-top:4px;}
+  .meet-body{padding:16px 18px;}.meet-block{margin-bottom:14px;}.meet-block:last-child{margin-bottom:0;}
+  .meet-block-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7a99;margin-bottom:6px;}
+  .meet-list{list-style:none;}.meet-list li{font-size:13px;color:#1a2033;padding:4px 0;display:flex;gap:8px;line-height:1.5;}.meet-list li .chk{color:#16a36b;font-weight:700;flex-shrink:0;}
+  .meet-give{background:#eff6ff;border-radius:8px;padding:12px 14px;}.meet-give .meet-block-title{color:#1e40af;}.meet-give .meet-list li .chk{color:#3b6fd4;}
+  .meet-warn{background:#fef2f2;border-radius:8px;padding:12px 14px;font-size:13px;color:#991b1b;line-height:1.5;}.meet-warn strong{color:#7f1d1d;}
+  .logi-card{background:#fff;border-radius:12px;border:1px solid #e2e6ed;padding:16px 18px;margin-bottom:14px;}
+  .logi-card h3{font-size:13px;color:#0f1929;margin-bottom:10px;}
+  .logi-step{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eef0f5;}.logi-step:last-child{border-bottom:none;}
+  .logi-time{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#7c3aed;min-width:80px;}
+  .logi-text{font-size:13px;color:#4b5680;line-height:1.5;}.logi-text strong{color:#1a2033;}
+  .track-card{background:#0f1929;color:#fff;border-radius:12px;padding:18px 20px;margin-bottom:14px;}
+  .track-card h3{font-size:15px;margin-bottom:8px;}.track-card p{font-size:13px;color:#cdd8ee;line-height:1.6;margin-bottom:8px;}
+  .track-btn{display:inline-block;background:#3b6fd4;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;font-size:13px;margin-top:6px;}
+  @media(max-width:1100px){.insights{grid-template-columns:1fr 1fr;}.legend-grid{grid-template-columns:repeat(2,1fr);}.sections-grid{grid-template-columns:repeat(2,1fr);}.prep-grid{grid-template-columns:1fr;}}
+  @media(max-width:700px){.insights{grid-template-columns:1fr;}.legend-grid{grid-template-columns:1fr;}.sections-grid{grid-template-columns:1fr;}.wrap{padding:0 10px 30px;}}
+
+  .tl-wrap{margin-top:8px;}
+  .tl-section-head{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7a99;margin:12px 0 6px;padding-bottom:5px;border-bottom:2px solid #eef0f5;}
+  .tl-item{display:flex;gap:10px;align-items:flex-start;padding:5px 6px;border-radius:6px;margin-bottom:2px;}
+  .tl-item.normal{}
+  .tl-item.key{background:#f0fdf8;}
+  .tl-item.warn{background:#fff8f0;}
+  .tl-item.food{background:#f5f3ff;}
+  .tl-item.drink{background:#eff6ff;}
+  .tl-time{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;min-width:120px;color:#6b7a99;flex-shrink:0;padding-top:2px;}
+  .tl-icon{font-size:15px;flex-shrink:0;}
+  .tl-action{font-size:12.5px;color:#1a2033;line-height:1.45;}
+  .tl-item.food .tl-action{font-weight:600;color:#5b21b6;}
+  .tl-item.warn .tl-action{color:#92400e;}
+  .tl-item.key .tl-action{color:#065f46;font-weight:500;}
+  .tl-item.drink .tl-action{color:#1e40af;}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-inner">
+  <div class="tb-title">90 km du Mont-Blanc 2026</div>
+  <div class="tb-sub">Gaël BERINGUET · Vague 3 · Départ 5h05 · Objectif 22h · Arrivée 03h05</div>
+  <div class="tabs">
+    <button class="tab active" data-view="avant"><span class="ic">✅</span> Avant la course</button>
+    <button class="tab" data-view="prep"><span class="ic">📊</span> Plan détaillé</button>
+    <button class="tab" data-view="course"><span class="ic">🏃</span> En course</button>
+    <button class="tab" data-view="parents"><span class="ic">👥</span> Suivi accompagnateurs</button>
+  </div>
+</div></div>
+<div class="wrap">
+<div class="view active" id="view-avant">
+<div class="prep-hero">
+  <h2>✅ Tout ce qu'il faut prévoir avant le départ</h2>
+  <p>Checklist matériel, liste de courses, sacs parents, charge glucidique et planning J-1 / Jour J.</p>
+</div>
+
+<div class="prep-grid">
+<div class="prep-card">
+  <h3>🎒 Matériel obligatoire</h3>
+  <div class="sub">⚠ Valider sur le roadbook officiel MMB — contrôlé au retrait du dossard (jeudi 25/06, sur RDV à EMC2).</div>
+  <ul class="chk-list">
+    <li><span class="box"></span><span><strong>Téléphone</strong> chargé + abonnement multi-pays (parcours passe en <strong>Suisse</strong>)</span></li>
+    <li><span class="box"></span><span><strong>Réserve d'eau</strong> 1L minimum (tes 2 flasques couvrent)</span></li>
+    <li><span class="box"></span><span><strong>Réserve alimentaire</strong> de sécurité</span></li>
+    <li><span class="box"></span><span><strong>Couverture de survie</strong> (1,40 × 2m mini)</span></li>
+    <li><span class="box"></span><span><strong>Sifflet</strong></span></li>
+    <li><span class="box"></span><span><strong>Bande élastique adhésive</strong></span></li>
+    <li><span class="box"></span><span><strong>Veste imperméable</strong> à capuche (membrane, coutures étanches)</span></li>
+    <li><span class="box"></span><span><strong>Lampe frontale</strong> + piles/batterie de rechange</span></li>
+    <li><span class="box"></span><span><strong>Gobelet personnel</strong> (pas de gobelets aux ravitos)</span></li>
+    <li><span class="box"></span><span><strong>Bonnet + gants</strong></span></li>
+    <li><span class="box"></span><span><strong>Veste chaude</strong> selon météo</span></li>
+    <li><span class="box"></span><span><strong>Pièce d'identité</strong> avec photo</span></li>
+  </ul>
+</div>
+<div class="prep-card">
+  <h3>🛒 Liste de courses nutrition</h3>
+  <div class="sub">Quantités avec marge. Multi-parfums pour éviter la lassitude.</div>
+  <ul class="chk-list">
+    <li><span class="box"></span><span>🥤 <strong>Red Bull 500ml</strong></span><span class="qty">1 canette</span></li>
+    <li><span class="box"></span><span>🟡 <strong>Naak Ultra Energy</strong></span><span class="qty">28 sachets</span></li>
+    <li><span class="box"></span><span>🍯 <strong>Gels Baouw</strong> (3 parfums)</span><span class="qty">15</span></li>
+    <li><span class="box"></span><span>🥣 <strong>Purées Baouw</strong> (2 parfums)</span><span class="qty">10</span></li>
+    <li><span class="box"></span><span>🍫 <strong>Clif Bars</strong> (poche, secours)</span><span class="qty">4</span></li>
+    <li><span class="box"></span><span>🧂 <strong>Aptonia Salt Caps</strong></span><span class="qty">1 boite (100)</span></li>
+    <li><span class="box"></span><span>💪 <strong>Apurna Maltodextrine</strong> (charge J-3)</span><span class="qty">3 jours</span></li>
+    <li><span class="box"></span><span>🍚 <strong>Riz blanc + thon en boite</strong> (parents)</span><span class="qty">×4 repas</span></li>
+  </ul>
+  <div style="margin-top:10px;padding:8px 12px;background:#eff6ff;border-radius:6px;font-size:11px;color:#1e40af;">Note : les Clif Bars ne sont plus les repas principaux aux points parents — le riz+thon les remplace. Garder 4 barres en poche de secours entre les ravitos.</div>
+</div>
+</div>
+
+<div class="sec-title" style="color:#7c3aed;border-color:#7c3aed;">Ce que je porte vs ce que les parents transportent</div>
+<div class="prep-card" style="margin-bottom:14px;">
+  <h3>🏃 Ce que je porte au départ</h3>
+  <div class="sub">Sac léger — parents rechargent dès le km 28,5 (Buet).</div>
+  <ul class="chk-list">
+    <li><span class="box"></span><span>🥤 Red Bull 500ml — à boire dans les 30min avant le départ</span></li>
+    <li><span class="box"></span><span>🟡 FL gauche : 1 sachet Naak + 500ml d'eau</span></li>
+    <li><span class="box"></span><span>🟡 FL droite : 1 sachet Naak + 500ml d'eau</span></li>
+    <li><span class="box"></span><span>💧 Camelback : <strong>500ml eau pure</strong> (sécurité montée Brévent de nuit)</span></li>
+    <li><span class="box"></span><span>🍯 3 gels Baouw en poche</span></li>
+    <li><span class="box"></span><span>🧂 16 gélules Aptonia (8 doses, pour 3h)</span></li>
+    <li><span class="box"></span><span>🍫 1 Clif Bar de secours</span></li>
+    <li><span class="box"></span><span>+ 3 sachets Naak supplémentaires (pour remplir à Planpraz)</span></li>
+  </ul>
+</div>
+
+<div class="bag-card">
+  <div class="bag-title">👥 Sac parents 1 — Buet (km 28,5 · ≈11h05)</div>
+  <div class="bag-when">Section courte ensuite (1h35) → recharge légère</div>
+  <div class="bag-items"><span class="bag-item">2 sachets Naak</span><span class="bag-item">2 gels Baouw</span><span class="bag-item">8 gélules Aptonia</span><span class="bag-item">🍚 Riz + thon chaud</span></div>
+</div>
+<div class="bag-card">
+  <div class="bag-title">👥 Sac parents 2 — La Villaz (km 35,1 · ≈12h40)</div>
+  <div class="bag-when">Avant Col du Passet → flasques pleines + eau camelback</div>
+  <div class="bag-items"><span class="bag-item">2 sachets Naak</span><span class="bag-item">2 gels Baouw</span><span class="bag-item">12 gélules Aptonia</span><span class="bag-item">Eau (camelback 500ml)</span><span class="bag-item">🍚 Riz + thon chaud</span></div>
+</div>
+<div class="bag-card" style="border-color:#fca5a5;">
+  <div class="bag-title" style="color:#dc2626;">👥 Sac parents 3 — Emosson (km 40,6 · ≈14h35) · CRITIQUE</div>
+  <div class="bag-when">Dernier accès parents · camelback Naak obligatoire (7,8km sans eau)</div>
+  <div class="bag-items"><span class="bag-item">3 sachets Naak (flasques + camelback)</span><span class="bag-item">2 gels Baouw</span><span class="bag-item">16 gélules Aptonia</span><span class="bag-item">1L eau (camelback)</span><span class="bag-item">🍚 Riz + thon chaud</span></div>
+</div>
+<div class="bag-card" style="border-color:#dc2626;">
+  <div class="bag-title" style="color:#dc2626;">👥 Sac parents 4 — Les Bois (km 69,7 · ≈21h45) · LE PLUS IMPORTANT</div>
+  <div class="bag-when">Abandon 2025 · nuit · s'asseoir, manger, recharger tout</div>
+  <div class="bag-items"><span class="bag-item">3 sachets Naak (flasques + camelback)</span><span class="bag-item">2 purées Baouw</span><span class="bag-item">1 gel réserve</span><span class="bag-item">14 gélules Aptonia</span><span class="bag-item">🍚 Riz + thon CHAUD</span><span class="bag-item">Couverture</span><span class="bag-item">Piles frontale</span></div>
+</div>
+
+<div class="prep-grid">
+<div class="prep-card">
+  <h3>💪 Charge glucidique J-3 → J-1</h3>
+  <ul class="chk-list">
+    <li><span class="box"></span><span><strong>J-3, J-2, J-1</strong> : 1,5L Apurna malto/jour (~150g glucides)</span></li>
+    <li><span class="box"></span><span>Repas riches en glucides (pâtes, riz, patates)</span></li>
+    <li><span class="box"></span><span>Hydratation + électrolytes</span></li>
+    <li><span class="box"></span><span>Réduire les fibres J-1</span></li>
+    <li><span class="box"></span><span>Sommeil : prioriser J-2 et J-3</span></li>
+  </ul>
+</div>
+<div class="prep-card">
+  <h3>📅 Veille &amp; Jour J</h3>
+  <ul class="timeline-prep">
+    <li><span class="tl-when">J-1 aprem</span><span class="tl-text">Préparer le sac, vérifier matériel. Charger frontale + batterie + téléphone.</span></li>
+    <li><span class="tl-when">J-1 soir</span><span class="tl-text">Briefer les parents. Préparer les 4 sacs. Repas glucides.</span></li>
+    <li><span class="tl-when">3h00</span><span class="tl-text">Réveil. Petit-déj glucides (pain, riz, confiture).</span></li>
+    <li><span class="tl-when">4h30</span><span class="tl-text">Préparer flasques Naak. Vérifier frontale.</span></li>
+    <li><span class="tl-when">4h35</span><span class="tl-text">🥤 Commencer le Red Bull 500ml en marchant.</span></li>
+    <li><span class="tl-when">5h05</span><span class="tl-text"><strong>Départ vague 3.</strong> Partir LENTEMENT.</span></li>
+  </ul>
+</div>
+</div>
+<div class="callout"><strong>Riz + thon :</strong> préparer du riz bien cuit (collant = plus digeste), thon à l'huile, avec bouillon chaud dans un thermos. Le bouillon salé = bonus électrolytes direct. Aux Bois (nuit) : prévoir le riz chaud, il fait frais en montagne à 21h.</div>
+<div class="footnote"><strong>Important :</strong> valider la liste du matériel obligatoire sur le roadbook officiel MMB 2026. Recommandations nutrition basées sur données produits + littérature générale ; validation médecin du sport conseillée.</div>
+</div>
+<div class="view" id="view-prep">
+<div class="stat-row">
+  <div class="stat"><div class="stat-label">Distance</div><div class="stat-val">88,8 km</div></div>
+  <div class="stat"><div class="stat-label">D+</div><div class="stat-val">6 137 m</div></div>
+  <div class="stat"><div class="stat-label">D-</div><div class="stat-val">6 137 m</div></div>
+  <div class="stat"><div class="stat-label">Objectif</div><div class="stat-val blue">22 h</div></div>
+  <div class="stat"><div class="stat-label">Arrivée</div><div class="stat-val green">03:05</div></div>
+  <div class="stat"><div class="stat-label">BH max</div><div class="stat-val">05:05</div></div>
+</div>
+<div class="sec-title">Profil altimétrique GPX 2026</div>
+<div class="chart-card"><div style="font-size:10px;color:#9aa3b8;margin-bottom:10px;">GPX officiel · gradient coloré · 🔴 DNF 2025 (Les Bois) · 👥 parents · ❌ pas d'eau</div><canvas id="profileChart" height="260"></canvas>
+<div class="grad-legend"><div class="grad-legend-item"><div class="grad-dot" style="background:#991b1b"></div>&gt;25%</div><div class="grad-legend-item"><div class="grad-dot" style="background:#dc2626"></div>15-25%</div><div class="grad-legend-item"><div class="grad-dot" style="background:#f97316"></div>8-15%</div><div class="grad-legend-item"><div class="grad-dot" style="background:#fbbf24"></div>2-8%</div><div class="grad-legend-item"><div class="grad-dot" style="background:#d1d5db"></div>Plat</div><div class="grad-legend-item"><div class="grad-dot" style="background:#3b82f6"></div>descente</div></div></div>
+<div class="sec-title">Intensité gradient km/km</div>
+<div class="chart-card" style="padding:12px 16px;"><div style="overflow-x:auto;"><div style="display:flex;gap:2px;min-width:max-content;" id="hmRow"></div><div style="display:flex;gap:2px;min-width:max-content;margin-top:3px;" id="hmLbl"></div></div></div>
+<div class="sec-title">5 passages déterminants</div>
+<div class="sections-grid">
+  <div class="sec-card extreme"><div class="sec-num">Section 1</div><div class="sec-name">Col du Passet</div><div class="sec-km">km 35,1→40,6 · 5,5km</div><div class="sec-stat">D+ <strong>+756m</strong> · max <strong>50%</strong></div><div class="sec-stat">Gradient net 26-27%</div><div class="sec-tip"><strong>Cause crampes 2025.</strong> Marcher 100% bâtons. 21:26/km.</div></div>
+  <div class="sec-card extreme"><div class="sec-num">Section 2</div><div class="sec-name">Descente Emosson→Châtelard</div><div class="sec-km">km 40,6→44,7 · 4,1km</div><div class="sec-stat">D- <strong>−866m</strong> · max <strong>−36%</strong></div><div class="sec-stat">Gradient −30% km 41-42</div><div class="sec-tip"><strong>❌ Pas d'eau Châtelard.</strong> Boire camelback en descente.</div></div>
+  <div class="sec-card high"><div class="sec-num">Section 3</div><div class="sec-name">Châtelard→Balme</div><div class="sec-km">km 44,7→51,5 · 6,8km</div><div class="sec-stat">D+ <strong>+1171m</strong> · max <strong>58%</strong></div><div class="sec-stat">km 44-45 = + raide du parcours</div><div class="sec-tip">Manger 1 gel avant de repartir du Châtelard.</div></div>
+  <div class="sec-card extreme"><div class="sec-num">Section 4 ⚠</div><div class="sec-name">Les Bois→Montenvers</div><div class="sec-km">km 69,7→75,2 · 5,5km</div><div class="sec-stat">D+ <strong>+825m</strong> · max <strong>42%</strong></div><div class="sec-stat">Au km 69+ après 16h40</div><div class="sec-tip"><strong>DNF 2025.</strong> Parents Les Bois → recharge totale.</div></div>
+  <div class="sec-card medium"><div class="sec-num">Section 5</div><div class="sec-name">Plan Aiguille→Arrivée</div><div class="sec-km">km 81,2→88,8 · 7,6km</div><div class="sec-stat">D- <strong>−1154m</strong> · max <strong>−22%</strong></div><div class="sec-stat">7,6km descente continue</div><div class="sec-tip">☕ Café avant. Bâtons. Petits pas.</div></div>
+</div>
+<div class="sec-title">Plan détaillé · Objectif 22h</div>
+<div class="card"><div class="table-wrap"><table>
+<thead><tr><th>Checkpoint</th><th class="r">km</th><th>D+/D−</th><th>Eau</th><th>Heure</th><th>BH</th><th>Marge</th><th class="r">Pace</th><th>🎒 Emporter depuis ce point</th><th>Consigne</th><th>2025</th><th>2025→5h05</th></tr></thead>
+<tbody>
+<tr class="r-depart"><td><span class="cp dep">Départ Chamonix</span></td><td class="r"><span class="km">0,0</span></td><td>—</td><td>—</td><td><span class="tt">05:05</span><span class="te">0h00</span></td><td>—</td><td><span class="mg-none">—</span></td><td class="r"><span class="pace">—</span></td><td><div class="nb"><div class="nr"><span class="ni">🟡</span><span class="nv"><strong>2 flasques :</strong> Naak + 500ml chacune</span></div><div class="nr"><span class="ni">💧</span><span class="nv"><strong>Camelback :</strong> 500ml eau</span></div><div class="nr"><span class="ni">🍯</span><span class="nv">3 gels · 🧂 2 gél / 60-75min (montées : 45min)</span></div><span class="gluc">~58g/h · 3h05</span></div></td><td><span class="note">Nuit, résiste au départ rapide. Gel km 6.</span></td><td><span class="t25">04:10</span></td><td><span class="tr25 neutral">05:05</span></td></tr>
+<tr class="r-section"><td colspan="12"><span class="sec-lbl">Montée Brévent → Balcon Sud · gradient 15-27% km 3-10</span></td></tr>
+<tr><td><span class="cp">Planpraz</span></td><td class="r"><span class="km">12,7</span></td><td><span class="dp">↑1601</span> <span class="dm">↓603</span></td><td><span class="rav">✦</span></td><td><span class="tt">08:10</span><span class="te">3h05</span></td><td>—</td><td><span class="mg-none">—</span></td><td class="r"><span class="pace">14:38</span></td><td><div class="nb"><div class="nr"><span class="ni">🟡</span><span class="nv"><strong>2 flasques :</strong> Naak (refaire)</span></div><div class="nr"><span class="ni">💧</span><span class="nv"><strong>Camelback :</strong> 1 sachet Naak + 1L</span></div><div class="nr"><span class="ni">🍯</span><span class="nv">2 gels · 🍲 manger</span></div><span class="eau-next warn">→ Buet 2h55 · Flégère ❌</span><span class="gluc">~65g/h</span></div></td><td><span class="note">Ravito officiel (soupe, fruits, pain). Camelback obligatoire (3h sans eau).</span></td><td><span class="t25">07:05</span></td><td><span class="tr25 neutral">08:00</span></td></tr>
+<tr><td><span class="cp">Flégère</span><span class="noeau">❌</span></td><td class="r"><span class="km">18,0</span></td><td><span class="dp">↑140</span> <span class="dm">↓151</span></td><td><span class="norav">❌</span></td><td><span class="tt">09:05</span><span class="te">4h00</span></td><td><span class="tbh">09:35</span></td><td><span class="mg mg-ok">+30</span></td><td class="r"><span class="pace">10:32</span></td><td><div class="nb"><div class="nr"><span class="ni">🍯</span><span class="nv">1 gel · 🧂 1 dose</span></div><span class="ncb">Pas de remplissage</span></div></td><td><span class="note">BH 9h35. Traverse aérienne, neige.</span></td><td><span class="t25">07:57</span></td><td><span class="tr25 good">08:52</span><span class="tr25s good">+43min ✓</span></td></tr>
+<tr class="r-section"><td colspan="12"><span class="sec-lbl">Descente Col Montets → Buet · SANS Loriaz 2026 → ~300m D+ et ~4km économisés ✓</span></td></tr>
+<tr class="r-parents"><td><span class="cp">Buet</span><span class="bp">👥</span></td><td class="r"><span class="km">28,5</span></td><td><span class="dp">↑338</span> <span class="dm">↓856</span></td><td><span class="rav">✦</span></td><td><span class="tt">11:05</span><span class="te">6h00</span></td><td><span class="tbh">11:35</span></td><td><span class="mg mg-ok">+30</span></td><td class="r"><span class="pace">11:19</span></td><td><div class="nb"><div class="npar">👥 Parents</div><div class="nr"><span class="ni">🟡</span><span class="nv">2 flasques Naak (refaire)</span></div><div class="nr"><span class="ni">💧</span><span class="nv">Camelback VIDE (1h35)</span></div><div class="nr"><span class="ni">🍫</span><span class="nv">1 Clif Bar + 🍲</span></div><span class="gluc">~55g/h</span></div></td><td><span class="note ok">Parents. 3-4min. Camelback vide section courte.</span></td><td><span class="t25">09:45</span></td><td><span class="tr25 good">10:40</span><span class="tr25s good">+55min ✓</span></td></tr>
+<tr class="r-parents"><td><span class="cp">La Villaz</span><span class="bp">👥</span></td><td class="r"><span class="km">35,1</span></td><td><span class="dp">↑447</span> <span class="dm">↓463</span></td><td style="font-size:10px;color:#6b7a99;">Fontaine</td><td><span class="tt">12:40</span><span class="te">7h35</span></td><td><span class="tbh">13:05</span></td><td><span class="mg mg-ok">+25</span></td><td class="r"><span class="pace">14:17</span></td><td><div class="nb"><div class="npar">👥 Parents</div><div class="nr"><span class="ni">🟡</span><span class="nv">2 flasques Naak PLEINES</span></div><div class="nr"><span class="ni">💧</span><span class="nv">Camelback 500ml eau (col)</span></div><div class="nr"><span class="ni">🍯</span><span class="nv">2 gels</span></div><span class="eau-next warn">⚠ Col Passet dans 300m</span><span class="gluc">~70g/h</span></div></td><td><span class="note warn">Fontaine. Col du Passet immédiat. 21:26/km.</span></td><td><span class="t25">12:11</span></td><td><span class="tr25 fail">13:06</span><span class="tr25s fail">−1min (km≠)</span></td></tr>
+<tr class="r-section"><td colspan="12"><span class="sec-lbl">⚠ ZONE 1 — Col du Passet 26-27% (max 50%) · cause crampes 2025</span></td></tr>
+<tr class="r-critical r-parents"><td><span class="cp">Emosson</span><span class="bp">👥</span></td><td class="r"><span class="km">40,6</span></td><td><span class="dp">↑756</span> <span class="dm">↓377</span></td><td><span class="rav">✦</span></td><td><span class="tt">14:35</span><span class="te">9h30</span></td><td><span class="tbh">15:05</span></td><td><span class="mg mg-ok">+30</span></td><td class="r"><span class="pace slow">21:26 ▼</span></td><td><div class="nb"><div class="npar">👥 DERNIER ACCÈS PARENTS</div><div class="nr"><span class="ni">🟡</span><span class="nv">2 flasques Naak</span></div><div class="nr"><span class="ni">💧</span><span class="nv"><strong>Camelback : 1 sachet Naak + 1L</strong></span></div><div class="nr"><span class="ni">🍫</span><span class="nv">1 Clif Bar + 🍲</span></div><span class="eau-next warn">→ Esserts 2h15 · ❌ Châtelard</span><span class="gluc">~72g/h</span></div></td><td><span class="note warn">CRITIQUE : flasques durent jusqu'aux Esserts (7,8km ❌). Eau manquée ici en 2025.</span></td><td><span class="t25">13:59</span></td><td><span class="tr25 tight">14:54</span><span class="tr25s tight">+11min ⚠</span></td></tr>
+<tr class="r-section"><td colspan="12"><span class="sec-lbl">⚠ ZONE 2 — Descente Emosson −30% · 866m D- · ❌ pas d'eau Châtelard</span></td></tr>
+<tr class="r-critical"><td><span class="cp">Le Châtelard</span><span class="noeau">❌</span></td><td class="r"><span class="km">44,7</span></td><td><span class="dp">↑37</span> <span class="dm">↓822</span></td><td><span class="norav">❌</span></td><td><span class="tt">15:45</span><span class="te">10h40</span></td><td><span class="tbh">16:05</span></td><td><span class="mg mg-tight">+20</span></td><td class="r"><span class="pace fast">17:09 ▲</span></td><td><div class="nb"><div class="nr"><span class="ni">💧</span><span class="nv">Boire camelback Emosson</span></div><div class="nr"><span class="ni">🍯</span><span class="nv">1 gel avant montée</span></div><div class="nr"><span class="ni">🧂</span><span class="nv">1 dose</span></div><span class="eau-next warn">→ Esserts 1h05 · km 44-45 = 58%</span></div></td><td><span class="note warn">BH serré +20. Pas d'eau. Manger avant montée 58%.</span></td><td><span class="t25">15:31</span></td><td><span class="tr25 fail">16:26</span><span class="tr25s fail">−21min</span></td></tr>
+<tr class="r-section"><td colspan="12"><span class="sec-lbl">⚠ ZONE 3 — Châtelard→Balme · km 44-45 = 58% · +1171m sans eau</span></td></tr>
+<tr><td><span class="cp">Les Esserts</span></td><td class="r"><span class="km">48,4</span></td><td><span class="dp">↑503</span> <span class="dm">↓0</span></td><td><span class="rav">✦</span></td><td><span class="tt">16:35</span><span class="te">11h30</span></td><td>—</td><td><span class="mg-none">—</span></td><td class="r"><span class="pace">14:17</span></td><td><div class="nb"><div class="nr"><span class="ni">🟡</span><span class="nv">2 flasques Naak (refaire)</span></div><div class="nr"><span class="ni">💧</span><span class="nv">Camelback 1 sachet Naak + 1L</span></div><div class="nr"><span class="ni">🥣</span><span class="nv">2 purées · 🍲</span></div><span class="eau-next warn">→ Le Tour 2h55</span><span class="gluc">~63g/h</span></div></td><td><span class="note">1er eau après 7,8km. Camelback obligatoire (2h55).</span></td><td><span class="t25">—</span></td><td><span class="tr25 neutral">—</span></td></tr>
+<tr><td><span class="cp">Le Tour</span></td><td class="r"><span class="km">60,1</span></td><td><span class="dp">↑823</span> <span class="dm">↓1004</span></td><td><span class="rav">✦</span></td><td><span class="tt">19:30</span><span class="te">14h25</span></td><td><span class="tbh">20:20</span></td><td><span class="mg mg-good">+50</span></td><td class="r"><span class="pace">16:13</span></td><td><div class="nb"><div class="nr"><span class="ni">🟡</span><span class="nv">2 flasques Naak (refaire)</span></div><div class="nr"><span class="ni">💧</span><span class="nv">Camelback 500ml eau</span></div><div class="nr"><span class="ni">🥣☕</span><span class="nv">2 purées · 🍫 café</span></div><span class="gluc">~58g/h</span></div></td><td><span class="note ok">BH 20h20. Café (début nuit). Pieds.</span></td><td><span class="t25">19:38</span></td><td><span class="tr25 fail">20:33</span><span class="tr25s fail">−13min</span></td></tr>
+<tr class="r-section"><td colspan="12"><span class="sec-lbl">🔴 ZONE 4 — Les Bois→Montenvers · D+825m · max 42% · DNF 2025 · derniers parents</span></td></tr>
+<tr class="r-key r-parents"><td><span class="cp">Les Bois</span><span class="bp">👥</span></td><td class="r"><span class="km">69,7</span></td><td><span class="dp">↑190</span> <span class="dm">↓713</span></td><td><span class="rav">✦</span></td><td><span class="tt">21:45</span><span class="te">16h40</span></td><td><span class="tbh">22:20</span></td><td><span class="mg mg-ok">+35</span></td><td class="r"><span class="pace">13:57</span></td><td><div class="nb"><div class="npar">👥 DERNIER POINT — S'ASSEOIR</div><div class="nr"><span class="ni">🟡</span><span class="nv">2 flasques Naak</span></div><div class="nr"><span class="ni">💧</span><span class="nv"><strong>Camelback : 1 sachet Naak + 1L</strong></span></div><div class="nr"><span class="ni">🥣🍫</span><span class="nv">2 purées + Clif + 🍲</span></div><span class="gluc">~66g/h</span><div class="nwarn">🔴 DNF 2025. Tout recharger.</div></div></td><td><span class="note crit">🔴 DNF 2025. S'asseoir, soupe chaude, recharge totale. km 71-72 = 42%.</span></td><td><span class="t25">21:51</span></td><td><span class="tr25 fail">22:46</span><span class="tr25s fail">−26min</span></td></tr>
+<tr class="r-key"><td><span class="cp">Montenvers</span></td><td class="r"><span class="km">75,2</span></td><td><span class="dp">↑825</span> <span class="dm">↓11</span></td><td><span class="rav">✦</span></td><td><span class="tt">00:15</span><span class="te">19h10</span></td><td><span class="tbh">00:50</span></td><td><span class="mg mg-ok">+35</span></td><td class="r"><span class="pace slow">27:16</span></td><td><div class="nb"><div class="nr"><span class="ni">🟡</span><span class="nv">2 flasques Naak (refaire)</span></div><div class="nr"><span class="ni">💧</span><span class="nv">Camelback VIDE (1h45)</span></div><div class="nr"><span class="ni">🥣🍲☕</span><span class="nv">1 purée + soupe + café</span></div><span class="gluc">~70g/h</span></div></td><td><span class="note ok">Jamais atteint 2025. Soupe + café. Reste 13km.</span></td><td><span class="t25 ab">ABANDON</span></td><td><span class="tr25 ab">ABANDON</span></td></tr>
+<tr class="r-section"><td colspan="12"><span class="sec-lbl">Plan Aiguille → Descente finale −1154m / 7,6km</span></td></tr>
+<tr><td><span class="cp">Plan de l'Aiguille</span></td><td class="r"><span class="km">81,2</span></td><td><span class="dp">↑467</span> <span class="dm">↓181</span></td><td><span class="rav">✦</span></td><td><span class="tt">02:00</span><span class="te">20h55</span></td><td><span class="tbh">02:50</span></td><td><span class="mg mg-good">+50</span></td><td class="r"><span class="pace">17:38</span></td><td><div class="nb"><div class="nr"><span class="ni">🟡</span><span class="nv">1 flasque Naak · 1 flasque eau</span></div><div class="nr"><span class="ni">☕🍲</span><span class="nv">CAFÉ + soupe</span></div><div class="nr"><span class="ni">🧂</span><span class="nv">2 doses</span></div><span class="gluc">~50g/h</span></div></td><td><span class="note">Dernier ravito. ☕ avant descente. Bâtons. +50min serein.</span></td><td><span class="t25">—</span></td><td><span class="tr25 neutral">—</span></td></tr>
+<tr class="r-arrivee"><td><span class="cp arr">Arrivée Chamonix</span></td><td class="r"><span class="km">88,8</span></td><td><span class="dp">↑10</span> <span class="dm">↓1154</span></td><td>—</td><td><span class="tt" style="color:#16a36b;">03:05</span><span class="te">22h00</span></td><td><span class="tbh">05:05</span></td><td><span class="mg mg-good">+2h00</span></td><td class="r"><span class="pace fast">8:42</span></td><td><div class="nb"><div class="nr"><span class="ni">🏁</span><span class="nv"><strong>Objectif 22h atteint</strong></span></div></div></td><td><span class="note ok">🏁 Bâtons descente. Marge 2h.</span></td><td><span class="t25">—</span></td><td><span class="tr25 neutral">—</span></td></tr>
+</tbody></table></div></div>
+<div class="callout"><strong>Comparaison 2025 :</strong> départ réel 4h10 → transposé +55min. Cases rouges trompeuses (km différents : 2025 = 92km avec Loriaz vs 2026 = 88,8km sans). Marge réelle 2025 base 5h05 : +30 à +40min jusqu'au Tour, puis effondrée aux Bois (eau manquée Châtelard).</div>
+<div class="insights">
+  <div class="ins red-b"><div class="ins-title red">⚠ 3 erreurs fatales 2025</div><ul><li><strong>Eau manquée Châtelard</strong> → FC 118bpm → glycémie effondrée → DNF Bois.</li><li><strong>Col Passet 30% trop vite</strong> : 18:44 vs 21:26 cible.</li><li><strong>Sodium quasi nul</strong> (gels Baouw). 2026 : Aptonia 2 gél / 60-75min (montées : 45min).</li></ul></div>
+  <div class="ins green-b"><div class="ins-title green">✓ Règles camelback</div><ul><li><strong>+ Naak</strong> : Planpraz, Emosson, Esserts, Les Bois (&gt;2h).</li><li><strong>Eau pure</strong> : La Villaz (col), Le Tour (nuit).</li><li><strong>Vide</strong> : Buet, Montenvers, Plan Aig (&lt;2h).</li></ul></div>
+  <div class="ins amber-b"><div class="ins-title amber">🧂 Protocole Aptonia</div><ul><li><strong>1 dose = 2 gélules</strong> (236mg Na).</li><li><strong>Montées intenses</strong> : 1 dose / 45min.</li><li><strong>Sections normales</strong> : 1 dose / 75min.</li><li><strong>Descentes / nuit froide</strong> : 1 dose / 90min.</li></ul></div>
+  <div class="ins gray-b"><div class="ins-title gray">📈 FC référence</div><ul><li>Montée : 138-146 bpm</li><li>Plat : 140-152 bpm</li><li><strong>Alerte : &lt;125 bpm</strong> → stop, manger</li><li>Bonk : &lt;110 bpm</li></ul></div>
+</div>
+<div class="footnote"><strong>Sources :</strong> GPX officiel 2026 · GPX Strava 2025 (FC) · Tableau MMB 2026 (BH) · LiveTrail 2025 · Fiches i-run.fr · Aptonia Decathlon. Validation médecin du sport conseillée.</div>
+</div>
+<div class="view" id="view-course">
+<div class="race-intro"><h2>🏃 Mémo course — guide précis de nutrition</h2><p>À chaque checkpoint : actions et timeline précise jusqu'au suivant. <strong>Règle d'or : FC &lt; 125 bpm sur montée → stop, manger, boire Naak.</strong> · Aptonia = toujours 2 gélules (1 dose = 236mg Na).</p></div>
+
+<div class="ckpt"><div class="ckpt-head depart"><div><div class="ckpt-name">Avant le départ</div><div class="ckpt-km">4h35 → 5h05</div></div><div class="ckpt-times"><div class="ckpt-target">05:05</div></div></div><div class="ckpt-body">
+<div class="ckpt-action"><span class="big">4h35</span> : Commencer le Red Bull 500ml en marchant vers la ligne.<br><span class="big">5h05</span> : Partir LENTEMENT — la caféine va donner une fausse sensation de forme.</div>
+<div class="ckpt-nutri">
+<div class="nrow"><span class="nic">🥤</span><span>Red Bull 500ml — 54g glucides + 160mg caféine · ne pas le boire d'un coup</span></div>
+<div class="nrow"><span class="nic">🟡</span><span>2 flasques Naak (500ml chacune)</span></div>
+<div class="nrow"><span class="nic">💧</span><span>Camelback : 500ml eau pure</span></div>
+<div class="nrow"><span class="nic">🍯</span><span>3 gels en poche · 🧂 16 gélules Aptonia</span></div>
+</div>
+<div class="tl-section-head">⏱ Section → Planpraz · Départ → Planpraz · 3h05 · nuit · montée Brévent 2471m</div>
+<div class="tl-wrap"><div class="tl-item food"><span class="tl-time">+0min&nbsp;·&nbsp;05:05</span><span class="tl-icon">🥤</span><span class="tl-action">Red Bull 500ml — commencer à boire en marchant vers la ligne</span></div><div class="tl-item drink"><span class="tl-time">+10min&nbsp;·&nbsp;05:15</span><span class="tl-icon">💧</span><span class="tl-action">Premiers km plats → commencer FL gauche Naak (2-3 gorgées toutes les 10min)</span></div><div class="tl-item normal"><span class="tl-time">+20min&nbsp;·&nbsp;05:25</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item normal"><span class="tl-time">+60min&nbsp;·&nbsp;06:05</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item key"><span class="tl-time">+100min&nbsp;·&nbsp;06:45</span><span class="tl-icon">🍯</span><span class="tl-action">1 gel Baouw — sommet Brévent ~2471m, pic d'effort maximum</span></div><div class="tl-item drink"><span class="tl-time">+105min&nbsp;·&nbsp;06:50</span><span class="tl-icon">💧</span><span class="tl-action">Commencer FL droite Naak</span></div><div class="tl-item normal"><span class="tl-time">+110min&nbsp;·&nbsp;06:55</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item normal"><span class="tl-time">+155min&nbsp;·&nbsp;07:40</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item drink"><span class="tl-time">+170min&nbsp;·&nbsp;07:55</span><span class="tl-icon">💧</span><span class="tl-action">Finir FL droite · commencer camelback si soif</span></div><div class="tl-item food"><span class="tl-time">+185min&nbsp;·&nbsp;08:10</span><span class="tl-icon">🍚</span><span class="tl-action">PLANPRAZ — ravito officiel : soupe + fruits + pain/tomme (pas de riz+thon, parents à partir de Buet)</span></div></div>
+</div></div>
+
+<div class="ckpt"><div class="ckpt-head"><div><div class="ckpt-name">Planpraz</div><div class="ckpt-km">km 12,7</div></div><div class="ckpt-times"><div class="ckpt-target">08:10</div></div></div><div class="ckpt-body">
+<span class="ckpt-tag tag-rav">✦ Ravito officiel</span>
+<div class="ckpt-action"><span class="big">Manger complet au ravito</span> (soupe, riz, fruits). Refaire flasques + remplir camelback (1 sachet Naak + 1L d'eau).</div>
+<div class="ckpt-warn">⚠ 2h55 jusqu'à Buet — Flégère ❌ pas d'eau. Camelback obligatoire.</div>
+<div class="tl-section-head">⏱ Section → Buet · Planpraz → Buet (via Flégère) · 2h55 · traverse + descente</div>
+<div class="tl-wrap"><div class="tl-item drink"><span class="tl-time">+15min&nbsp;·&nbsp;08:25</span><span class="tl-icon">💧</span><span class="tl-action">Commencer FL gauche (Naak refaite)</span></div><div class="tl-item normal"><span class="tl-time">+20min&nbsp;·&nbsp;08:30</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item key"><span class="tl-time">+55min&nbsp;·&nbsp;09:05</span><span class="tl-icon">🍯</span><span class="tl-action">1 gel Baouw — Flégère, pas de ravito eau ici</span></div><div class="tl-item normal"><span class="tl-time">+60min&nbsp;·&nbsp;09:10</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item normal"><span class="tl-time">+105min&nbsp;·&nbsp;09:55</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item drink"><span class="tl-time">+110min&nbsp;·&nbsp;10:00</span><span class="tl-icon">💧</span><span class="tl-action">Commencer FL droite + camelback si sec</span></div><div class="tl-item normal"><span class="tl-time">+150min&nbsp;·&nbsp;10:40</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item normal"><span class="tl-time">+165min&nbsp;·&nbsp;10:55</span><span class="tl-icon">🍯</span><span class="tl-action">1 gel Baouw si faim · finir flasques</span></div><div class="tl-item food"><span class="tl-time">+175min&nbsp;·&nbsp;11:05</span><span class="tl-icon">🍚</span><span class="tl-action">BUET 👥 — riz + thon parents + refaire tout</span></div></div>
+</div></div>
+
+<div class="ckpt"><div class="ckpt-head"><div><div class="ckpt-name">Flégère</div><div class="ckpt-km">km 18 · ❌ pas d'eau</div></div><div class="ckpt-times"><div class="ckpt-target">09:05</div><div class="ckpt-bh">BH 09:35</div></div></div><div class="ckpt-body">
+<span class="ckpt-tag tag-noeau">❌ Pas d'eau</span><span class="ckpt-tag tag-mg">+30min</span>
+<div class="ckpt-action">Pas d'arrêt — consulter la timeline et continuer. Prise de gel et Aptonia en marchant.</div>
+</div></div>
+
+<div class="ckpt"><div class="ckpt-head parents"><div><div class="ckpt-name">Buet 👥</div><div class="ckpt-km">km 28,5</div></div><div class="ckpt-times"><div class="ckpt-target">11:05</div><div class="ckpt-bh">BH 11:35</div></div></div><div class="ckpt-body">
+<span class="ckpt-tag tag-parents">👥 Parents</span><span class="ckpt-tag tag-mg">+30min</span>
+<div class="ckpt-action"><span class="big">3-4 min.</span> Manger riz + thon parents. Refaire flasques + camelback VIDE (1h35 seulement).</div>
+<div class="tl-section-head">⏱ Section → La Villaz · Buet → La Villaz · 1h35 · section courte</div>
+<div class="tl-wrap"><div class="tl-item drink"><span class="tl-time">+5min&nbsp;·&nbsp;11:10</span><span class="tl-icon">💧</span><span class="tl-action">Commencer FL gauche Naak</span></div><div class="tl-item normal"><span class="tl-time">+20min&nbsp;·&nbsp;11:25</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item normal"><span class="tl-time">+65min&nbsp;·&nbsp;12:10</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item normal"><span class="tl-time">+90min&nbsp;·&nbsp;12:35</span><span class="tl-icon">🍯</span><span class="tl-action">1 gel Baouw si besoin · préparer le col mentalement</span></div><div class="tl-item food"><span class="tl-time">+95min&nbsp;·&nbsp;12:40</span><span class="tl-icon">🍚</span><span class="tl-action">LA VILLAZ 👥 — riz + thon parents + flasques pleines + camelback eau</span></div></div>
+</div></div>
+
+<div class="ckpt"><div class="ckpt-head parents"><div><div class="ckpt-name">La Villaz 👥</div><div class="ckpt-km">km 35,1 · fontaine</div></div><div class="ckpt-times"><div class="ckpt-target">12:40</div><div class="ckpt-bh">BH 13:05</div></div></div><div class="ckpt-body">
+<span class="ckpt-tag tag-parents">👥 Parents</span><span class="ckpt-tag tag-mg">+25min</span>
+<div class="ckpt-action"><span class="big">3 min.</span> Riz + thon parents. Flasques pleines + camelback 500ml eau. Col du Passet dans 300m.</div>
+<div class="ckpt-warn">⚠ COL DU PASSET : marcher 100%, bâtons, 21:26/km. C'est ici que les crampes 2025 ont démarré.</div>
+<div class="tl-section-head">⏱ Section → Emosson · La Villaz → Emosson · 1h55 · ⚠ Col du Passet 26-27% — marcher 100%</div>
+<div class="tl-wrap"><div class="tl-item warn"><span class="tl-time">+5min&nbsp;·&nbsp;12:45</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia avant d'attaquer le col</span></div><div class="tl-item drink"><span class="tl-time">+10min&nbsp;·&nbsp;12:50</span><span class="tl-icon">💧</span><span class="tl-action">Boire FL + camelback eau — col intense, hydratation max</span></div><div class="tl-item normal"><span class="tl-time">+45min&nbsp;·&nbsp;13:25</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item key"><span class="tl-time">+50min&nbsp;·&nbsp;13:30</span><span class="tl-icon">🍯</span><span class="tl-action">1 gel Baouw — mi-montée col du Passet</span></div><div class="tl-item normal"><span class="tl-time">+90min&nbsp;·&nbsp;14:10</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item drink"><span class="tl-time">+100min&nbsp;·&nbsp;14:20</span><span class="tl-icon">💧</span><span class="tl-action">Finir camelback eau · boire FL</span></div><div class="tl-item normal"><span class="tl-time">+110min&nbsp;·&nbsp;14:50</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia avant Emosson</span></div><div class="tl-item food"><span class="tl-time">+115min&nbsp;·&nbsp;14:35</span><span class="tl-icon">🍚</span><span class="tl-action">EMOSSON 👥 — riz + thon parents + REMPLIR TOUT (camelback Naak)</span></div></div>
+</div></div>
+
+<div class="ckpt"><div class="ckpt-head parents"><div><div class="ckpt-name">Emosson 👥</div><div class="ckpt-km">km 40,6</div></div><div class="ckpt-times"><div class="ckpt-target">14:35</div><div class="ckpt-bh">BH 15:05</div></div></div><div class="ckpt-body">
+<span class="ckpt-tag tag-parents">👥 DERNIER ACCÈS</span><span class="ckpt-tag tag-mg">+30min</span>
+<div class="ckpt-action"><span class="big">5 min.</span> Riz + thon parents. REMPLIR camelback (1 Naak + 1L). C'est la dernière eau avant 7,8km.</div>
+<div class="ckpt-warn">🔴 PAS D'EAU au Châtelard. Flasques + camelback durent jusqu'aux Esserts. Eau manquée ici = DNF 2025.</div>
+<div class="tl-section-head">⏱ Section → Esserts · Emosson → Esserts · 2h00 · ⚠ descente −30% + ❌ pas d'eau Châtelard</div>
+<div class="tl-wrap"><div class="tl-item warn"><span class="tl-time">+5min&nbsp;·&nbsp;14:40</span><span class="tl-icon">💧</span><span class="tl-action">BOIRE IMMÉDIATEMENT — descente intense = sudation forte</span></div><div class="tl-item normal"><span class="tl-time">+20min&nbsp;·&nbsp;14:55</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item drink"><span class="tl-time">+40min&nbsp;·&nbsp;15:15</span><span class="tl-icon">💧</span><span class="tl-action">Boire camelback Naak — pas d'eau au Châtelard</span></div><div class="tl-item warn"><span class="tl-time">+65min&nbsp;·&nbsp;15:40</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia avant Châtelard</span></div><div class="tl-item warn"><span class="tl-time">+70min&nbsp;·&nbsp;15:45</span><span class="tl-icon">🍯</span><span class="tl-action">CHÂTELARD ❌ — 1 gel Baouw AVANT la montée 58%</span></div><div class="tl-item key"><span class="tl-time">+95min&nbsp;·&nbsp;16:10</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (montée 58%, effort max)</span></div><div class="tl-item drink"><span class="tl-time">+110min&nbsp;·&nbsp;16:25</span><span class="tl-icon">💧</span><span class="tl-action">Boire camelback · presque aux Esserts</span></div><div class="tl-item food"><span class="tl-time">+120min&nbsp;·&nbsp;16:35</span><span class="tl-icon">🍲</span><span class="tl-action">LES ESSERTS — ravito soupe + fruits · refaire flasques + CB Naak</span></div></div>
+</div></div>
+
+<div class="ckpt"><div class="ckpt-head critical"><div><div class="ckpt-name">Le Châtelard</div><div class="ckpt-km">km 44,7 · ❌ pas d'eau</div></div><div class="ckpt-times"><div class="ckpt-target">15:45</div><div class="ckpt-bh">BH 16:05</div></div></div><div class="ckpt-body">
+<span class="ckpt-tag tag-noeau">❌ Pas d'eau</span><span class="ckpt-tag tag-mg-tight">+20min (serré)</span>
+<div class="ckpt-action">Pas d'arrêt. 1 gel + Aptonia AVANT de repartir. km 44-45 = 58% de gradient — le plus raide du parcours.</div>
+</div></div>
+
+<div class="ckpt"><div class="ckpt-head"><div><div class="ckpt-name">Les Esserts</div><div class="ckpt-km">km 48,4</div></div><div class="ckpt-times"><div class="ckpt-target">16:35</div></div></div><div class="ckpt-body">
+<span class="ckpt-tag tag-rav">✦ Ravito officiel</span>
+<div class="ckpt-action">1er eau après 7,8km. Manger au ravito. Refaire flasques + camelback (1 Naak + 1L).</div>
+<div class="tl-section-head">⏱ Section → Le Tour · Les Esserts → Le Tour · 2h55 · Tête de Balme + descente</div>
+<div class="tl-wrap"><div class="tl-item normal"><span class="tl-time">+20min&nbsp;·&nbsp;16:55</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item normal"><span class="tl-time">+45min&nbsp;·&nbsp;17:20</span><span class="tl-icon">🥣</span><span class="tl-action">1 purée Baouw (passage montée Balme)</span></div><div class="tl-item normal"><span class="tl-time">+65min&nbsp;·&nbsp;17:40</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item normal"><span class="tl-time">+90min&nbsp;·&nbsp;18:05</span><span class="tl-icon">🥣</span><span class="tl-action">1 purée Baouw</span></div><div class="tl-item normal"><span class="tl-time">+110min&nbsp;·&nbsp;18:25</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item drink"><span class="tl-time">+135min&nbsp;·&nbsp;18:50</span><span class="tl-icon">💧</span><span class="tl-action">Finir camelback si pas fait</span></div><div class="tl-item normal"><span class="tl-time">+155min&nbsp;·&nbsp;19:10</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item food"><span class="tl-time">+175min&nbsp;·&nbsp;19:30</span><span class="tl-icon">☕</span><span class="tl-action">LE TOUR — café + soupe ravito · refaire flasques + CB eau</span></div></div>
+</div></div>
+
+<div class="ckpt"><div class="ckpt-head"><div><div class="ckpt-name">Le Tour</div><div class="ckpt-km">km 60,1</div></div><div class="ckpt-times"><div class="ckpt-target">19:30</div><div class="ckpt-bh">BH 20:20</div></div></div><div class="ckpt-body">
+<span class="ckpt-tag tag-rav">✦ Ravito officiel</span><span class="ckpt-tag tag-mg">+50min</span>
+<div class="ckpt-action">Soupe + <span class="big">café</span> (début nuit). Vérifier pieds. Refaire flasques + camelback 500ml eau. Purées à partir de maintenant.</div>
+<div class="tl-section-head">⏱ Section → Les Bois · Le Tour → Les Bois · 2h15 · descente nuit</div>
+<div class="tl-wrap"><div class="tl-item normal"><span class="tl-time">+15min&nbsp;·&nbsp;19:45</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item normal"><span class="tl-time">+40min&nbsp;·&nbsp;20:10</span><span class="tl-icon">🥣</span><span class="tl-action">1 purée Baouw</span></div><div class="tl-item normal"><span class="tl-time">+60min&nbsp;·&nbsp;20:30</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item normal"><span class="tl-time">+85min&nbsp;·&nbsp;20:55</span><span class="tl-icon">🥣</span><span class="tl-action">1 purée Baouw</span></div><div class="tl-item normal"><span class="tl-time">+105min&nbsp;·&nbsp;21:15</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item drink"><span class="tl-time">+130min&nbsp;·&nbsp;21:40</span><span class="tl-icon">💧</span><span class="tl-action">Finir flasques · préparer l'arrêt Les Bois</span></div><div class="tl-item food"><span class="tl-time">+135min&nbsp;·&nbsp;21:45</span><span class="tl-icon">🍚</span><span class="tl-action">LES BOIS 👥 — riz + thon parents · S'ASSEOIR · recharge TOTALE</span></div></div>
+</div></div>
+
+<div class="ckpt"><div class="ckpt-head key"><div><div class="ckpt-name">Les Bois 👥</div><div class="ckpt-km">km 69,7 · 🔴 DNF 2025</div></div><div class="ckpt-times"><div class="ckpt-target">21:45</div><div class="ckpt-bh">BH 22:20</div></div></div><div class="ckpt-body">
+<span class="ckpt-tag tag-parents">👥 DERNIER POINT</span><span class="ckpt-tag tag-mg">+35min</span>
+<div class="ckpt-action"><span class="big">S'ASSEOIR 5-7 min.</span> Riz + thon parents + soupe chaude. Recharge TOTALE. Repartir vers 22h05.</div>
+<div class="ckpt-warn">🔴 DNF 2025 ICI. Ne repartir qu'avec réservoirs pleins. +825m vers Montenvers, max 42% à km 71-72.</div>
+<div class="tl-section-head">⏱ Section → Montenvers · Les Bois → Montenvers · 2h30 · ⚠ +825m · max 42% · TERRAIN INCONNU 2025</div>
+<div class="tl-wrap"><div class="tl-item drink"><span class="tl-time">+10min&nbsp;·&nbsp;22:15</span><span class="tl-icon">💧</span><span class="tl-action">Commencer FL gauche Naak immédiatement</span></div><div class="tl-item normal"><span class="tl-time">+15min&nbsp;·&nbsp;22:20</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item normal"><span class="tl-time">+45min&nbsp;·&nbsp;22:50</span><span class="tl-icon">🥣</span><span class="tl-action">1 purée Baouw</span></div><div class="tl-item normal"><span class="tl-time">+60min&nbsp;·&nbsp;23:05</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item normal"><span class="tl-time">+80min&nbsp;·&nbsp;23:25</span><span class="tl-icon">🥣</span><span class="tl-action">1 purée Baouw · si nausée : remplacer par gel</span></div><div class="tl-item normal"><span class="tl-time">+100min&nbsp;·&nbsp;23:45</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item key"><span class="tl-time">+120min&nbsp;·&nbsp;00:05</span><span class="tl-icon">🍯</span><span class="tl-action">1 gel réserve si fatigue intense · boire FL droite</span></div><div class="tl-item food"><span class="tl-time">+130min&nbsp;·&nbsp;00:15</span><span class="tl-icon">☕</span><span class="tl-action">MONTENVERS — soupe + café · refaire flasques · CB VIDE</span></div></div>
+</div></div>
+
+<div class="ckpt"><div class="ckpt-head key"><div><div class="ckpt-name">Montenvers</div><div class="ckpt-km">km 75,2</div></div><div class="ckpt-times"><div class="ckpt-target">00:15</div><div class="ckpt-bh">BH 00:50</div></div></div><div class="ckpt-body">
+<span class="ckpt-tag tag-rav">✦ Ravito officiel</span><span class="ckpt-tag tag-mg">+35min</span>
+<div class="ckpt-action"><span class="big">Jamais atteint en 2025.</span> Soupe + café. Refaire flasques. Camelback VIDE (1h45 seulement).</div>
+<div class="tl-section-head">⏱ Section → Plan Aiguille · Montenvers → Plan de l'Aiguille · 1h45 · traverse haute altitude</div>
+<div class="tl-wrap"><div class="tl-item normal"><span class="tl-time">+20min&nbsp;·&nbsp;00:50</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item normal"><span class="tl-time">+45min&nbsp;·&nbsp;01:15</span><span class="tl-icon">🥣</span><span class="tl-action">1 purée Baouw</span></div><div class="tl-item normal"><span class="tl-time">+70min&nbsp;·&nbsp;01:40</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item food"><span class="tl-time">+90min&nbsp;·&nbsp;02:00</span><span class="tl-icon">☕</span><span class="tl-action">PLAN AIGUILLE — CAFÉ OBLIGATOIRE + soupe · 1 flasque Naak · 1 flasque eau</span></div></div>
+</div></div>
+
+<div class="ckpt"><div class="ckpt-head"><div><div class="ckpt-name">Plan de l'Aiguille</div><div class="ckpt-km">km 81,2 · dernier ravito</div></div><div class="ckpt-times"><div class="ckpt-target">02:00</div><div class="ckpt-bh">BH 02:50</div></div></div><div class="ckpt-body">
+<span class="ckpt-tag tag-rav">✦ Ravito officiel</span><span class="ckpt-tag tag-mg">+50min</span>
+<div class="ckpt-action"><span class="big">☕ CAFÉ OBLIGATOIRE</span> avant la descente. 1 flasque Naak + 1 flasque eau. Bâtons en main.</div>
+<div class="tl-section-head">⏱ Section → Arrivée · Plan de l'Aiguille → Arrivée · 1h05 · descente finale −1154m</div>
+<div class="tl-wrap"><div class="tl-item normal"><span class="tl-time">+20min&nbsp;·&nbsp;02:35</span><span class="tl-icon">🧂</span><span class="tl-action">1 dose Aptonia (2 gélules)</span></div><div class="tl-item drink"><span class="tl-time">+40min&nbsp;·&nbsp;02:55</span><span class="tl-icon">💧</span><span class="tl-action">Finir flasque · boire régulièrement</span></div><div class="tl-item food"><span class="tl-time">+50min&nbsp;·&nbsp;03:05</span><span class="tl-icon">🏁</span><span class="tl-action">ARRIVÉE — 22h de course · objectif atteint</span></div></div>
+</div></div>
+
+<div class="ckpt"><div class="ckpt-head arrivee"><div><div class="ckpt-name">🏁 Arrivée Chamonix</div><div class="ckpt-km">km 88,8</div></div><div class="ckpt-times"><div class="ckpt-target" style="color:#16a36b;">03:05</div><div class="ckpt-bh">BH 05:05 · +2h</div></div></div><div class="ckpt-body"><div class="ckpt-action"><span class="big">Objectif 22h atteint.</span></div></div></div>
+</div>
+<div class="view" id="view-parents">
+<div class="parent-hero"><h2>👥 Guide accompagnateurs — Gaël BERINGUET</h2><p>4 points de rencontre pour voir Gaël et recharger son matériel. Objectif : qu'il reparte de chaque point avec flasques pleines, nourri, motivé. Le plus important est <strong>Les Bois</strong> (km 69,7) — abandon 2025.</p><div class="bib">Dossard LiveTrail : à renseigner</div></div>
+
+<div class="recalc-card">
+  <h3>⏱ Recalage live des temps de passage</h3>
+  <div class="sub">Quand Gaël passe à un checkpoint, entrez son heure réelle. L'outil recalcule toutes les heures suivantes et vous dit s'il est en avance ou en retard — pour ajuster votre arrivée aux points de rencontre.</div>
+  <div class="recalc-form">
+    <div class="rc-field"><label>Dernier point passé</label><select id="rc-checkpoint"></select></div>
+    <div class="rc-field"><label>Heure réelle de passage</label><input type="time" id="rc-time"></div>
+    <button class="rc-btn" onclick="recalc()">Recalculer</button>
+  </div>
+  <div id="rc-result"></div>
+</div>
+
+<div class="track-card"><h3>📡 Suivre Gaël en temps réel</h3><p>Pendant la course, suivez sa progression sur LiveTrail (temps de passage en direct à chaque checkpoint). Comparez avec l'outil de recalage ci-dessus pour anticiper son arrivée.</p><a class="track-btn" href="https://mbm.livetrail.net/" target="_blank">Ouvrir LiveTrail MMB →</a></div>
+
+<div class="sec-title" style="color:#7c3aed;border-color:#7c3aed;">Les 4 points de rencontre</div>
+
+<div class="meet-card"><div class="meet-head"><div><div class="meet-num">Point 1 / 4</div><div class="meet-name">Buet</div><div class="meet-km">km 28,5</div></div><div class="meet-timing"><div class="meet-arrival"><span class="big">≈ 11h05</span>arrivée estimée</div><div class="meet-window">Sur place dès 10h30 · barrière 11h35</div></div></div><div class="meet-body">
+  <div class="meet-block"><div class="meet-block-title">À préparer</div><ul class="meet-list"><li><span class="chk">✓</span> 2 sachets Naak (+ eau) prêts pour les flasques</li><li><span class="chk">✓</span> Boisson chaude (café, thé, bouillon)</li><li><span class="chk">✓</span> 8 gélules Aptonia + 2 gels Baouw</li></ul></div>
+  <div class="meet-block meet-give"><div class="meet-block-title">Pendant l'arrêt (3-4 min)</div><ul class="meet-list"><li><span class="chk">→</span> Remplir ses 2 flasques de Naak</li><li><span class="chk">→</span> Lui donner Clif + food chaude</li><li><span class="chk">→</span> Recharger poches (gels + sel)</li><li><span class="chk">→</span> <strong>Ne pas remplir le camelback</strong> (section courte)</li></ul></div>
+</div></div>
+
+<div class="meet-card"><div class="meet-head"><div><div class="meet-num">Point 2 / 4</div><div class="meet-name">La Villaz</div><div class="meet-km">km 35,1 · fontaine</div></div><div class="meet-timing"><div class="meet-arrival"><span class="big">≈ 12h40</span>arrivée estimée</div><div class="meet-window">Sur place dès 12h00 · barrière 13h05</div></div></div><div class="meet-body">
+  <div class="meet-block"><div class="meet-block-title">À préparer</div><ul class="meet-list"><li><span class="chk">✓</span> 2 sachets Naak (flasques pleines impératives)</li><li><span class="chk">✓</span> 12 gélules Aptonia + 2 gels</li><li><span class="chk">✓</span> Eau pour camelback (500ml)</li></ul></div>
+  <div class="meet-block meet-give"><div class="meet-block-title">Pendant l'arrêt (3 min)</div><ul class="meet-list"><li><span class="chk">→</span> Flasques Naak <strong>pleines à ras</strong></li><li><span class="chk">→</span> Camelback : 500ml d'eau</li><li><span class="chk">→</span> Recharger gels + sel</li></ul></div>
+  <div class="meet-warn">⚠ <strong>Col du Passet 300m après.</strong> Grosse montée. Rappelez-lui de monter LENTEMENT (crampes 2025 ici).</div>
+</div></div>
+
+<div class="meet-card"><div class="meet-head" style="background:#fff8f0;"><div><div class="meet-num">Point 3 / 4 · technique</div><div class="meet-name">Emosson</div><div class="meet-km">km 40,6 · barrage (Suisse)</div></div><div class="meet-timing"><div class="meet-arrival"><span class="big">≈ 14h35</span>arrivée estimée</div><div class="meet-window">Sur place dès 14h00 · barrière 15h05</div></div></div><div class="meet-body">
+  <div class="meet-block"><div class="meet-block-title">À préparer</div><ul class="meet-list"><li><span class="chk">✓</span> <strong>3 sachets Naak</strong> (2 flasques + 1 camelback)</li><li><span class="chk">✓</span> 🍚 Riz + thon chaud (repas principal)</li><li><span class="chk">✓</span> 16 gélules Aptonia + 2 gels</li><li><span class="chk">✓</span> 1L d'eau pour camelback</li></ul></div>
+  <div class="meet-block meet-give"><div class="meet-block-title">Pendant l'arrêt (5 min)</div><ul class="meet-list"><li><span class="chk">→</span> Flasques Naak pleines</li><li><span class="chk">→</span> <strong>Camelback : 1 sachet Naak + 1L d'eau</strong></li><li><span class="chk">→</span> Le faire manger (Clif + soupe + riz)</li><li><span class="chk">→</span> Recharger toutes les poches</li></ul></div>
+  <div class="meet-warn">🔴 <strong>POINT CRITIQUE — dernier accès facile avant Les Bois (~7h plus tard).</strong> Le camelback DOIT être rempli de Naak ici : aucun point d'eau pendant les 7,8 km suivants (Châtelard inclus). C'est exactement ce manque d'eau qui a provoqué son abandon 2025.</div>
+</div></div>
+
+<div class="meet-card" style="border-left-color:#dc2626;"><div class="meet-head" style="background:#fef2f2;"><div><div class="meet-num" style="color:#dc2626;">Point 4 / 4 · LE PLUS IMPORTANT</div><div class="meet-name">Les Bois</div><div class="meet-km">km 69,7 · nuit · 🔴 DNF 2025</div></div><div class="meet-timing"><div class="meet-arrival"><span class="big">≈ 21h45</span>arrivée estimée</div><div class="meet-window" style="color:#dc2626;">Sur place dès 21h00 · barrière 22h20</div></div></div><div class="meet-body">
+  <div class="meet-block"><div class="meet-block-title">À préparer</div><ul class="meet-list"><li><span class="chk">✓</span> <strong>3 sachets Naak</strong> (flasques + camelback)</li><li><span class="chk">✓</span> 🍚 <strong>Riz + thon chaud</strong> + bouillon (repas principal)</li><li><span class="chk">✓</span> 2 purées Baouw + 1 gel réserve</li><li><span class="chk">✓</span> 14 gélules Aptonia</li><li><span class="chk">✓</span> Endroit pour s'asseoir + couverture + piles frontale</li></ul></div>
+  <div class="meet-block meet-give"><div class="meet-block-title">Pendant l'arrêt (5-7 min, ne pas presser)</div><ul class="meet-list"><li><span class="chk">→</span> <strong>Le faire ASSEOIR</strong> et manger (soupe + Clif)</li><li><span class="chk">→</span> Flasques pleines + camelback (1 Naak + 1L)</li><li><span class="chk">→</span> Vérifier moral, pieds, batteries frontale</li><li><span class="chk">→</span> Le rassurer : +35 min de marge, bonne position</li></ul></div>
+  <div class="meet-warn">🔴 <strong>C'est ICI qu'il a abandonné en 2025</strong>, vidé. Cette fois il arrive avec de la marge et ravitaillé. Votre rôle : le poser, le nourrir, le remotiver. La montée suivante (Montenvers, +825m) est la plus dure de la fin. <strong>Ne le laissez pas repartir sans avoir mangé.</strong></div>
+</div></div>
+
+<div class="logi-card"><h3>🚗 Logistique déplacements</h3>
+  <div class="logi-step"><div class="logi-time">10h30</div><div class="logi-text"><strong>Buet</strong> (km 28,5) — vallée de Vallorcine. Arrivée ~11h05.</div></div>
+  <div class="logi-step"><div class="logi-time">12h00</div><div class="logi-text"><strong>La Villaz</strong> (km 35,1) — proche du Buet. Arrivée ~12h40.</div></div>
+  <div class="logi-step"><div class="logi-time">14h00</div><div class="logi-text"><strong>Emosson</strong> (km 40,6) — barrage côté <strong>Suisse</strong> (papiers + monnaie/carte). Arrivée ~14h35.</div></div>
+  <div class="logi-step"><div class="logi-time">14h35→21h00</div><div class="logi-text">Grande pause (~6h30). Retour vallée de Chamonix, repos. Suivez Gaël sur LiveTrail.</div></div>
+  <div class="logi-step"><div class="logi-time">21h00</div><div class="logi-text"><strong>Les Bois</strong> (km 69,7) — près de Chamonix (Le Lavancher). Nuit, vêtements chauds. Arrivée ~21h45.</div></div>
+  <div class="logi-step"><div class="logi-time">≈ 03h05</div><div class="logi-text"><strong>Arrivée Chamonix</strong> centre-ville 🏁 (entre 02h30 et 05h05 selon allure).</div></div>
+</div>
+
+<div class="callout" style="background:#f0fdf8;border-color:#6ee7b7;color:#065f46;"><strong>Si Gaël est en retard :</strong> les heures sont des cibles pour 22h. Tant qu'il passe avant les barrières (en rouge), tout va bien. Utilisez l'outil de recalage en haut pour ajuster vos arrivées. S'il prend du retard sur les barrières, motivez-le et aidez-le à ne pas traîner aux arrêts.</div>
+</div>
+</div>
+<script>
+const eleKm=[1043.1,1092.6,1176.1,1268.0,1459.5,1669.6,1938.1,2084.0,2260.2,2329.2,2447.7,2290.3,2072.5,2056.4,1923.9,1841.4,1866.0,1863.0,1853.2,1928.4,1953.5,2103.6,2070.1,2008.4,1765.8,1512.3,1431.0,1400.8,1368.4,1503.8,1552.3,1611.0,1738.8,1581.8,1378.4,1339.0,1309.7,1569.4,1842.1,1925.9,1997.9,1744.2,1442.7,1271.6,1117.4,1365.1,1524.3,1640.3,1773.7,1903.0,2071.0,2279.8,2238.8,2085.4,1992.8,2053.5,1914.0,1694.3,1511.8,1492.3,1475.3,1382.6,1274.2,1268.7,1296.6,1218.8,1237.6,1152.0,1089.2,1152.8,1356.5,1502.4,1685.1,1872.4,1964.4,2163.3,2125.3,2107.8,2139.5,2184.0,2124.6,1960.3,1796.8,1627.5,1461.6,1259.5,1036.6,1040.4,1040.4];
+const gradKm=[5.0,8.3,9.2,19.1,21.0,26.9,14.6,17.6,6.9,11.8,-15.7,-21.8,-1.6,-13.2,-8.2,2.5,-0.3,-1.0,7.5,2.5,15.0,-3.4,-6.2,-24.3,-25.4,-8.1,-3.0,-3.2,13.5,4.8,5.9,12.8,-15.7,-20.3,-3.9,-2.9,26.0,27.3,8.4,7.2,-25.4,-30.1,-17.1,-15.4,24.8,15.9,11.6,13.3,12.9,16.8,20.9,-4.1,-15.3,-9.3,6.1,-13.9,-22.0,-18.2,-1.9,-1.7,-9.3,-10.8,-0.6,2.8,-7.8,1.9,-8.6,-6.3,6.4,20.4,14.6,18.3,18.7,9.2,19.9,-3.8,-1.8,3.2,4.5,-5.9,-16.4,-16.4,-16.9,-16.6,-20.2,-22.3,0.4,0.0];
+function gC(g){if(g>=25)return'#7f1d1d';if(g>=18)return'#dc2626';if(g>=12)return'#f97316';if(g>=5)return'#fbbf24';if(g>=-2)return'#d1d5db';if(g>=-8)return'#93c5fd';if(g>=-15)return'#3b82f6';return'#1d4ed8';}
+function draw(){const canvas=document.getElementById('profileChart');if(!canvas)return;const dpr=window.devicePixelRatio||1,W=canvas.parentElement.clientWidth,H=260;canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);const pad={l:44,r:12,t:14,b:40},cW=W-pad.l-pad.r,cH=H-pad.t-pad.b,nK=eleKm.length-1,eMin=950,eMax=2550;const xK=km=>pad.l+(km/nK)*cW,yE=e=>pad.t+cH-(e-eMin)/(eMax-eMin)*cH;ctx.strokeStyle='#f0f2f7';ctx.lineWidth=1;[1000,1400,1800,2200,2400].forEach(e=>{const y=yE(e);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cW,y);ctx.stroke();ctx.fillStyle='#c4c9d6';ctx.font='8px Inter';ctx.textAlign='right';ctx.fillText(e+'m',pad.l-2,y+3);});[0,10,20,30,40,50,60,70,80,88].forEach(km=>{const x=xK(km);ctx.strokeStyle='#f0f2f7';ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+cH);ctx.stroke();ctx.fillStyle='#c4c9d6';ctx.font='8px Inter';ctx.textAlign='center';ctx.fillText('km'+km,x,pad.t+cH+11);});[[35.1,40.6,'rgba(220,38,38,0.08)','Col Passet'],[40.6,44.7,'rgba(249,115,22,0.09)','Desc.'],[44.7,51.5,'rgba(251,191,36,0.09)','Balme'],[69.7,75.2,'rgba(220,38,38,0.12)','Montenvers'],[80,86,'rgba(59,130,246,0.07)','Desc.fin']].forEach(z=>{ctx.fillStyle=z[2];ctx.fillRect(xK(z[0]),pad.t,xK(z[1])-xK(z[0]),cH);ctx.fillStyle='rgba(30,30,30,0.45)';ctx.font='bold 7px Inter';ctx.textAlign='center';ctx.fillText(z[3],xK((z[0]+z[1])/2),pad.t+8);});const x44=xK(44.7);ctx.fillStyle='rgba(220,38,38,0.15)';ctx.fillRect(x44-2,pad.t,4,cH);ctx.fillStyle='#dc2626';ctx.font='bold 7px Inter';ctx.textAlign='center';ctx.fillText('\u274c',x44,pad.t+cH+22);[28.5,35.1,40.6,69.7].forEach(km=>{const x=xK(km);ctx.strokeStyle='#7c3aed';ctx.lineWidth=1.2;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+cH);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#7c3aed';ctx.font='9px Inter';ctx.textAlign='center';ctx.fillText('\ud83d\udc65',x,pad.t+cH+22);});const bY=yE(eMin);for(let k=0;k<nK;k++){const g=gradKm[k],x1=xK(k),x2=xK(k+1),y1=yE(eleKm[k]),y2=yE(eleKm[k+1]);ctx.fillStyle=gC(g);ctx.globalAlpha=0.55;ctx.beginPath();ctx.moveTo(x1,bY);ctx.lineTo(x1,y1);ctx.lineTo(x2,y2);ctx.lineTo(x2,bY);ctx.closePath();ctx.fill();}ctx.globalAlpha=1;ctx.beginPath();ctx.strokeStyle='#374151';ctx.lineWidth=1.5;eleKm.forEach((e,k)=>{k===0?ctx.moveTo(xK(k),yE(e)):ctx.lineTo(xK(k),yE(e));});ctx.stroke();const cps=[[0,'Départ'],[12.7,'Planpraz'],[18,'Flégère'],[28.5,'Buet'],[35.1,'La Villaz'],[40.6,'Emosson'],[44.7,'Châtelard'],[60.1,'Le Tour'],[69.7,'Les Bois'],[75.2,'Montenvers'],[81.2,'Pl.Aig.'],[88,'Arrivée']];cps.forEach((cp,i)=>{const km=Math.min(cp[0],88),x=xK(km),e=eleKm[Math.round(km)],y=yE(e);ctx.setLineDash([2,2]);ctx.strokeStyle='#9aa3b8';ctx.lineWidth=0.7;ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+cH);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#3b6fd4';ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#374151';ctx.font='bold 8px Inter';ctx.textAlign='center';ctx.fillText(cp[1],x,i%2===0?y-6:y+14);});const ax=xK(69.7);ctx.strokeStyle='#dc2626';ctx.lineWidth=1.8;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(ax,pad.t);ctx.lineTo(ax,pad.t+cH);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#dc2626';ctx.font='bold 8px Inter';ctx.textAlign='left';ctx.fillText('2025\u2717',ax+3,pad.t+18);}
+function buildHm(){const row=document.getElementById('hmRow');if(!row||row.children.length)return;const lbl=document.getElementById('hmLbl');gradKm.forEach((g,km)=>{const c=document.createElement('div');c.className='hm-cell';const i=Math.min(Math.abs(g)/30,1),h=Math.round(12+i*20);c.style.background=gC(g);c.style.height=h+'px';c.style.marginTop=(32-h)+'px';c.style.opacity=0.5+i*0.5;c.title='km '+km+'-'+(km+1)+' : '+(g>0?'+':'')+g.toFixed(1)+'%';row.appendChild(c);const l=document.createElement('div');l.style.cssText='width:9px;font-size:7px;color:#9aa3b8;text-align:center;flex-shrink:0;';if(km%10===0){l.textContent=km;l.style.fontWeight='600';l.style.color='#6b7a99';}lbl.appendChild(l);});}
+document.querySelectorAll('.tab').forEach(t=>{t.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.getElementById('view-'+t.dataset.view).classList.add('active');if(t.dataset.view==='prep'){setTimeout(draw,50);}window.scrollTo(0,0);});});
+window.addEventListener('load',()=>{draw();buildHm();});
+window.addEventListener('resize',()=>{if(document.getElementById('view-prep').classList.contains('active'))draw();});
+
+// ===== RECALAGE TOOL =====
+const CK=[
+ {n:'Départ Chamonix',p:0,bh:null,par:false},
+ {n:'Planpraz',p:185,bh:null,par:false},
+ {n:'Flégère',p:240,bh:270,par:false},
+ {n:'Buet',p:360,bh:390,par:true},
+ {n:'La Villaz',p:455,bh:480,par:true},
+ {n:'Emosson',p:570,bh:600,par:true},
+ {n:'Le Châtelard',p:640,bh:660,par:false},
+ {n:'Les Esserts',p:690,bh:null,par:false},
+ {n:'Le Tour',p:865,bh:915,par:false},
+ {n:'Les Bois',p:1000,bh:1035,par:true},
+ {n:'Montenvers',p:1150,bh:1185,par:false},
+ {n:"Plan de l'Aiguille",p:1255,bh:1305,par:false},
+ {n:'Arrivée Chamonix',p:1320,bh:1440,par:false}
+];
+function fmtClock(elapsed){let t=305+Math.round(elapsed);t=((t%1440)+1440)%1440;let h=Math.floor(t/60),m=t%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');}
+function initRecalc(){const sel=document.getElementById('rc-checkpoint');if(!sel||sel.children.length)return;CK.forEach((c,i)=>{if(i<CK.length-1){const o=document.createElement('option');o.value=i;o.textContent=c.n+' (cible '+fmtClock(c.p)+')';sel.appendChild(o);}});sel.value=3;}
+function recalc(){
+ const idx=+document.getElementById('rc-checkpoint').value;
+ const ts=document.getElementById('rc-time').value;
+ const res=document.getElementById('rc-result');
+ if(!ts){res.innerHTML='<div class="rc-status behind">Entrez l\'heure de passage réelle.</div>';return;}
+ const [h,m]=ts.split(':').map(Number);
+ let act=(h*60+m)-305; if(act<-300)act+=1440;
+ const off=act-CK[idx].p;
+ let statusClass=off<-3?'ahead':(off>3?'behind':'ontime');
+ let statusTxt=off<-3?('🟢 Gaël est EN AVANCE de '+Math.abs(Math.round(off))+' min sur le plan'):(off>3?('🟠 Gaël est EN RETARD de '+Math.round(off)+' min sur le plan'):'🔵 Gaël est pile dans les temps');
+ let html='<div class="rc-status '+statusClass+'">'+statusTxt+'</div>';
+ html+='<table class="rc-table"><thead><tr><th>Point</th><th>Nouvelle ETA</th><th>Barrière</th><th>Marge</th></tr></thead><tbody>';
+ for(let i=idx+1;i<CK.length;i++){
+  const ne=CK[i].p+off;const eta=fmtClock(ne);
+  let bhCell='—',mgCell='—';
+  if(CK[i].bh!=null){bhCell=fmtClock(CK[i].bh);const mg=Math.round(CK[i].bh-ne);let cls=mg>=30?'mg-good':(mg>=10?'mg-ok':(mg>=0?'mg-tight':'mg-fail'));mgCell='<span class="rc-mg '+cls+'">'+(mg>=0?'+':'')+mg+' min</span>';}
+  html+='<tr class="'+(CK[i].par?'parent':'')+'"><td class="rc-cp">'+(CK[i].par?'👥 ':'')+CK[i].n+'</td><td class="rc-eta">'+eta+'</td><td style="font-family:JetBrains Mono;font-size:12px;color:#6b7a99;">'+bhCell+'</td><td>'+mgCell+'</td></tr>';
+ }
+ html+='</tbody></table>';
+ res.innerHTML=html;
+}
+window.addEventListener('load',initRecalc);
+</script>
+</body>
+</html>
